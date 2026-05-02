@@ -2,7 +2,7 @@
 
 A diagnostic tool for specialty food brands preparing product data for retailer submission. Validates GTINs against GS1 standards with retailer-specific context — built for operations teams, not developers.
 
-**[Try the live tool →](https://gtin-validator.streamlit.app)** *(update this URL after deployment)*
+**[Try the live tool →](https://msshawnp-gtin-validator-app-yz0mxn.streamlit.app/)**
 
 ---
 
