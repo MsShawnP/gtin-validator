@@ -1,0 +1,300 @@
+"""
+Tests for the GTIN Validator core engine.
+
+Run with: python -m pytest tests.py -v
+"""
+
+import pytest
+from gtin_core import (
+    calculate_check_digit,
+    identify_gtin_type,
+    validate_single_gtin,
+    validate_batch,
+    analyze_hierarchy,
+    generate_before_after,
+    generate_executive_summary,
+    generate_fix_roadmap,
+    generate_gtin14_suggestions,
+    GTINType,
+    Severity,
+)
+
+
+# =========================================================================
+# Check digit calculation
+# =========================================================================
+
+class TestCheckDigit:
+    """GS1 mod-10 check digit algorithm per General Specifications §7.9."""
+
+    def test_gtin12_check_digit(self):
+        # GS1 example: 61414100001 → check digit 2
+        assert calculate_check_digit("61414100001") == 2
+
+    def test_gtin13_check_digit(self):
+        # EAN-13: 590123412345 → check digit 7
+        assert calculate_check_digit("590123412345") == 7
+
+    def test_gtin14_check_digit(self):
+        # GTIN-14: 1061414100001 → check digit 9
+        assert calculate_check_digit("1061414100001") == 9
+
+    def test_gtin8_check_digit(self):
+        # GTIN-8: 9638507 → check digit 4
+        assert calculate_check_digit("9638507") == 4
+
+    def test_all_zeros(self):
+        assert calculate_check_digit("00000000000") == 0
+
+
+# =========================================================================
+# GTIN type identification
+# =========================================================================
+
+class TestGTINType:
+    def test_gtin8(self):
+        assert identify_gtin_type(8) == GTINType.GTIN_8
+
+    def test_gtin12(self):
+        assert identify_gtin_type(12) == GTINType.GTIN_12
+
+    def test_gtin13(self):
+        assert identify_gtin_type(13) == GTINType.GTIN_13
+
+    def test_gtin14(self):
+        assert identify_gtin_type(14) == GTINType.GTIN_14
+
+    def test_unknown_lengths(self):
+        for length in [0, 1, 5, 9, 10, 11, 15, 20]:
+            assert identify_gtin_type(length) == GTINType.UNKNOWN
+
+
+# =========================================================================
+# Single GTIN validation
+# =========================================================================
+
+class TestSingleValidation:
+    def test_valid_gtin12(self):
+        result = validate_single_gtin("614141000012", row_number=1)
+        assert result.gtin_type == GTINType.GTIN_12
+        # Note: will have UPC_NOT_GTIN13 warning, but no critical issues
+        assert not result.has_critical
+
+    def test_empty_gtin(self):
+        result = validate_single_gtin("", row_number=1)
+        assert not result.is_valid
+        assert result.has_critical
+        assert result.issues[0].code == "EMPTY"
+
+    def test_non_numeric(self):
+        result = validate_single_gtin("6141410003A5", row_number=1)
+        assert not result.is_valid
+        assert result.issues[0].code == "NON_NUMERIC"
+
+    def test_invalid_length(self):
+        result = validate_single_gtin("61414100010", row_number=1)  # 11 digits
+        assert not result.is_valid
+        assert result.issues[0].code == "INVALID_LENGTH"
+
+    def test_bad_check_digit(self):
+        result = validate_single_gtin("614141000356", row_number=1)
+        assert not result.is_valid
+        assert any(i.code == "BAD_CHECK_DIGIT" for i in result.issues)
+        assert result.corrected_value == "614141000357"
+
+    def test_all_zeros(self):
+        result = validate_single_gtin("000000000000", row_number=1)
+        assert not result.is_valid
+        assert any(i.code == "ALL_ZEROS" for i in result.issues)
+
+    def test_gtin14_case_level(self):
+        result = validate_single_gtin("10614141000019", row_number=1)
+        assert result.gtin_type == GTINType.GTIN_14
+        assert result.indicator_digit == "1"
+        assert any(i.code == "CASE_LEVEL" for i in result.issues)
+
+    def test_gtin14_indicator_nine(self):
+        result = validate_single_gtin("90614141000016", row_number=1)
+        assert any(i.code == "INDICATOR_NINE" for i in result.issues)
+
+    def test_strips_whitespace_and_dashes(self):
+        result = validate_single_gtin(" 614-141-000012 ", row_number=1)
+        assert result.cleaned == "614141000012"
+        assert not result.has_critical
+
+    def test_upc_gtin13_warning(self):
+        result = validate_single_gtin("614141000012", row_number=1)
+        assert any(i.code == "UPC_NOT_GTIN13" for i in result.issues)
+
+    def test_company_prefix_extracted_gtin12(self):
+        result = validate_single_gtin("614141000012", row_number=1)
+        assert result.company_prefix == "6141410"
+
+    def test_company_prefix_extracted_gtin14(self):
+        result = validate_single_gtin("10614141000019", row_number=1)
+        assert result.company_prefix == "0614141"
+
+
+# =========================================================================
+# Batch validation
+# =========================================================================
+
+class TestBatchValidation:
+    def test_duplicate_detection(self):
+        data = validate_batch(["614141000012", "614141000012"])
+        assert data["summary"]["duplicate_groups"] == 1
+        for r in data["results"]:
+            assert any(i.code == "DUPLICATE" for i in r.issues)
+
+    def test_prefix_mismatch_detection(self):
+        data = validate_batch([
+            "614141000012",
+            "614141000029",
+            "732141000013",  # different prefix
+        ])
+        mismatched = [r for r in data["results"] if any(
+            i.code == "PREFIX_MISMATCH" for i in r.issues
+        )]
+        assert len(mismatched) == 1
+        assert mismatched[0].company_prefix == "7321410"
+
+    def test_summary_counts(self):
+        data = validate_batch([
+            "614141000012",   # valid (with UPC warning)
+            "61414100010",    # critical: invalid length
+            "000000000000",   # critical: all zeros
+        ])
+        assert data["summary"]["total_gtins"] == 3
+        assert data["summary"]["critical_issues"] == 2
+
+    def test_score_returned(self):
+        data = validate_batch(["614141000012"])
+        assert "score" in data["score"]
+        assert "grade" in data["score"]
+        assert 0 <= data["score"]["score"] <= 100
+
+    def test_cost_estimate_returned(self):
+        data = validate_batch(["61414100010"])  # will have critical issue
+        cost = data["cost_estimate"]
+        assert cost["chargeback_range"][0] <= cost["chargeback_range"][1]
+        assert cost["annual_estimate_low"] <= cost["annual_estimate_high"]
+
+    def test_empty_batch(self):
+        data = validate_batch([])
+        assert data["summary"]["total_gtins"] == 0
+        assert data["score"]["score"] == 0
+
+
+# =========================================================================
+# Hierarchy analysis
+# =========================================================================
+
+class TestHierarchy:
+    def test_matched_pair(self):
+        data = validate_batch([
+            "614141000012",    # unit GTIN-12
+            "10614141000019",  # case GTIN-14 (indicator 1)
+        ])
+        assert len(data["hierarchy"]["matched_pairs"]) == 1
+        assert data["hierarchy"]["has_hierarchy"] is True
+
+    def test_orphan_case(self):
+        data = validate_batch([
+            "10999999999993",  # case GTIN-14 with no matching unit
+        ])
+        assert len(data["hierarchy"]["orphan_cases"]) == 1
+
+    def test_no_hierarchy(self):
+        data = validate_batch(["614141000012"])
+        assert data["hierarchy"]["has_hierarchy"] is False
+
+
+# =========================================================================
+# Before/after corrections
+# =========================================================================
+
+class TestBeforeAfter:
+    def test_correction_generated(self):
+        data = validate_batch(["614141000356"])  # bad check digit
+        pairs = generate_before_after(data["results"])
+        assert len(pairs) == 1
+        assert pairs[0]["after"] == "614141000357"
+
+    def test_no_corrections_when_valid(self):
+        data = validate_batch(["614141000012"])
+        pairs = generate_before_after(data["results"])
+        assert len(pairs) == 0
+
+
+# =========================================================================
+# Executive summary
+# =========================================================================
+
+class TestExecutiveSummary:
+    def test_returns_string(self):
+        data = validate_batch(["614141000012", "61414100010"])
+        summary = generate_executive_summary(data)
+        assert isinstance(summary, str)
+        assert len(summary) > 50
+
+    def test_mentions_score(self):
+        data = validate_batch(["614141000012"])
+        summary = generate_executive_summary(data)
+        assert "/100" in summary
+
+
+# =========================================================================
+# Fix roadmap
+# =========================================================================
+
+class TestFixRoadmap:
+    def test_roadmap_sorted_by_priority(self):
+        data = validate_batch([
+            "614141000012",   # UPC warning + no case GTIN
+            "61414100010",    # invalid length (critical)
+            "614141000356",   # bad check digit (critical)
+        ])
+        roadmap = generate_fix_roadmap(data["results"], data["hierarchy"])
+        priorities = [item["priority"] for item in roadmap]
+        assert priorities == sorted(priorities)
+
+    def test_info_items_excluded(self):
+        data = validate_batch(["10614141000019"])  # GTIN-14, info only
+        roadmap = generate_fix_roadmap(data["results"], data["hierarchy"])
+        # Should not include CASE_LEVEL info item
+        codes = [item["code"] for item in roadmap]
+        assert "CASE_LEVEL" not in codes
+
+
+# =========================================================================
+# GTIN-14 suggestions
+# =========================================================================
+
+class TestGTIN14Suggestions:
+    def test_suggestion_generated(self):
+        data = validate_batch(["614141000012"])
+        suggestions = generate_gtin14_suggestions(
+            data["results"], data["hierarchy"]
+        )
+        assert len(suggestions) == 1
+        assert len(suggestions[0]["indicators"]) == 8
+
+    def test_check_digit_correct_on_suggestions(self):
+        data = validate_batch(["614141000012"])
+        suggestions = generate_gtin14_suggestions(
+            data["results"], data["hierarchy"]
+        )
+        for ind, info in suggestions[0]["indicators"].items():
+            gtin14 = info["gtin14"]
+            assert len(gtin14) == 14
+            # Verify check digit
+            payload = gtin14[:-1]
+            expected = calculate_check_digit(payload)
+            assert int(gtin14[-1]) == expected
+
+    def test_no_suggestion_for_invalid_gtin(self):
+        data = validate_batch(["61414100010"])  # invalid length
+        suggestions = generate_gtin14_suggestions(
+            data["results"], data["hierarchy"]
+        )
+        assert len(suggestions) == 0
