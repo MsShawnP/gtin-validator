@@ -98,7 +98,7 @@ gtin-validator/
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
 
 ---
 
