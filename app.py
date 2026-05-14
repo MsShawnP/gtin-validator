@@ -395,11 +395,17 @@ if gtins_to_validate:
     if validate_btn or st.session_state.get("validated"):
         st.session_state["validated"] = True
 
-        # Use cached validation data if available, otherwise validate
+        # Use cached validation data if available, otherwise validate.
+        # When a fresh validation runs, invalidate the derived report
+        # caches so the CSV/PDF download reflect the new results.
         if validate_btn or "validation_data_cache" not in st.session_state:
             with st.spinner("Validating your GTINs against GS1 standards..."):
                 validation_data = validate_batch(gtins_to_validate)
                 st.session_state["validation_data_cache"] = validation_data
+                st.session_state.pop("csv_report_cache", None)
+                st.session_state.pop("pdf_report_cache", None)
+                st.session_state.pop("pdf_report_company_name", None)
+                st.session_state.pop("pdf_report_error", None)
         else:
             validation_data = st.session_state["validation_data_cache"]
 
@@ -468,7 +474,9 @@ if gtins_to_validate:
                 '</p>',
                 unsafe_allow_html=True,
             )
-            csv_data = generate_csv_report(validation_data)
+            if "csv_report_cache" not in st.session_state:
+                st.session_state["csv_report_cache"] = generate_csv_report(validation_data)
+            csv_data = st.session_state["csv_report_cache"]
             filename_base = company_name.replace(" ", "_") if company_name else "gtin_validation"
             st.download_button(
                 label="📄 Download CSV Report",
@@ -488,17 +496,31 @@ if gtins_to_validate:
                 '</p>',
                 unsafe_allow_html=True,
             )
-            try:
-                pdf_buffer = generate_pdf_report(validation_data, company_name)
+            pdf_cache_stale = (
+                "pdf_report_cache" not in st.session_state
+                or st.session_state.get("pdf_report_company_name") != company_name
+            )
+            if pdf_cache_stale:
+                try:
+                    st.session_state["pdf_report_cache"] = generate_pdf_report(
+                        validation_data, company_name
+                    )
+                    st.session_state["pdf_report_company_name"] = company_name
+                    st.session_state.pop("pdf_report_error", None)
+                except Exception as e:
+                    st.session_state["pdf_report_cache"] = None
+                    st.session_state["pdf_report_error"] = str(e)
+
+            if st.session_state.get("pdf_report_error"):
+                st.error(f"PDF generation error: {st.session_state['pdf_report_error']}")
+            else:
                 st.download_button(
                     label="📑 Download PDF Report",
-                    data=pdf_buffer,
+                    data=st.session_state["pdf_report_cache"],
                     file_name=f"{filename_base}_report.pdf",
                     mime="application/pdf",
                     use_container_width=True,
                 )
-            except Exception as e:
-                st.error(f"PDF generation error: {e}")
 
         # === VALIDATION RESULTS TABS ===
         st.markdown("---")

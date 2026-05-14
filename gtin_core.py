@@ -403,15 +403,17 @@ def validate_batch(gtins: list[str]) -> dict:
     ]
 
     # --- Duplicate detection ---
-    cleaned_list = [r.cleaned for r in results if r.cleaned]
-    counts = Counter(cleaned_list)
-    duplicates = {k: v for k, v in counts.items() if v > 1}
+    cleaned_to_rows: dict[str, list[int]] = defaultdict(list)
+    for r in results:
+        if r.cleaned:
+            cleaned_to_rows[r.cleaned].append(r.row_number)
+    duplicates = {k: len(v) for k, v in cleaned_to_rows.items() if len(v) > 1}
 
     for result in results:
         if result.cleaned in duplicates:
             other_rows = [
-                r.row_number for r in results
-                if r.cleaned == result.cleaned and r.row_number != result.row_number
+                rn for rn in cleaned_to_rows[result.cleaned]
+                if rn != result.row_number
             ]
             result.issues.append(Issue(
                 severity=Severity.WARNING,
@@ -603,13 +605,30 @@ def generate_retailer_checklists(
     Each check includes a list of failing GTINs (row_number, raw_input)
     for drill-down in reports.
     """
+    # Precompute the batch-level slices that don't depend on the retailer
+    # profile — avoids re-iterating `results` once per retailer.
+    invalid = [r for r in results if not r.is_valid]
+    dups = [r for r in results if any(i.code == "DUPLICATE" for i in r.issues)]
+    dup_count = len({r.cleaned for r in dups})
+    prefix_failing = [
+        r for r in results
+        if any(i.code == "PREFIX_MISMATCH" for i in r.issues)
+    ]
+    has_case = any(
+        r.gtin_type == GTINType.GTIN_14 and r.indicator_digit in "12345678"
+        for r in results
+    )
+
+    invalid_failing = [(r.row_number, r.raw_input) for r in invalid]
+    dup_failing = [(r.row_number, r.raw_input) for r in dups]
+    prefix_failing_rows = [(r.row_number, r.raw_input) for r in prefix_failing]
+
     checklists = {}
 
     for retailer_name, profile in RETAILER_PROFILES.items():
         checks = []
 
         # Check 1: All GTINs valid
-        invalid = [r for r in results if not r.is_valid]
         checks.append({
             "check": "All GTINs pass check digit validation",
             "passed": len(invalid) == 0,
@@ -617,12 +636,10 @@ def generate_retailer_checklists(
                 f"{len(invalid)} GTIN(s) have invalid check digits"
                 if invalid else "All check digits valid"
             ),
-            "failing_gtins": [(r.row_number, r.raw_input) for r in invalid],
+            "failing_gtins": invalid_failing,
         })
 
         # Check 2: No duplicates
-        dups = [r for r in results if any(i.code == "DUPLICATE" for i in r.issues)]
-        dup_count = len({r.cleaned for r in dups})
         checks.append({
             "check": "No duplicate GTINs",
             "passed": dup_count == 0,
@@ -630,16 +647,17 @@ def generate_retailer_checklists(
                 f"{dup_count} duplicate GTIN(s) found"
                 if dup_count else "No duplicates"
             ),
-            "failing_gtins": [(r.row_number, r.raw_input) for r in dups],
+            "failing_gtins": dup_failing,
         })
 
-        # Check 3: Accepted GTIN types
+        # Check 3: Accepted GTIN types (profile-dependent)
+        required_types = profile["required_gtin_types"]
         wrong_type = [
             r for r in results
-            if r.gtin_type not in profile["required_gtin_types"]
+            if r.gtin_type not in required_types
             and r.gtin_type != GTINType.UNKNOWN
         ]
-        accepted = ", ".join(t.value for t in profile["required_gtin_types"])
+        accepted = ", ".join(t.value for t in required_types)
         checks.append({
             "check": f"GTIN types accepted by {retailer_name}",
             "passed": len(wrong_type) == 0,
@@ -665,10 +683,6 @@ def generate_retailer_checklists(
 
         # Check 5: Case GTIN present (if required)
         if profile["requires_case_gtin"]:
-            has_case = any(
-                r.gtin_type == GTINType.GTIN_14 and r.indicator_digit in "12345678"
-                for r in results
-            )
             checks.append({
                 "check": "Case-level GTIN-14 present",
                 "passed": has_case,
@@ -681,10 +695,6 @@ def generate_retailer_checklists(
             })
 
         # Check 6: Consistent company prefix
-        prefix_failing = [
-            r for r in results
-            if any(i.code == "PREFIX_MISMATCH" for i in r.issues)
-        ]
         checks.append({
             "check": "Consistent GS1 company prefix",
             "passed": len(prefix_failing) == 0,
@@ -693,7 +703,7 @@ def generate_retailer_checklists(
                 if prefix_failing
                 else "All GTINs share a consistent company prefix"
             ),
-            "failing_gtins": [(r.row_number, r.raw_input) for r in prefix_failing],
+            "failing_gtins": prefix_failing_rows,
         })
 
         passed = sum(1 for c in checks if c["passed"])
@@ -1212,9 +1222,11 @@ def check_data_completeness(df: pd.DataFrame) -> dict:
     field_analysis: dict[str, dict] = {}
 
     for field_name, col in matched_columns.items():
-        non_empty = int(df[col].apply(
-            lambda x: bool(str(x).strip()) if pd.notna(x) else False
-        ).sum())
+        # Vectorized "non-empty after strip" count — replaces a per-row
+        # Python lambda that scaled poorly on wide product masters.
+        non_empty = int(
+            df[col].fillna("").astype(str).str.strip().astype(bool).sum()
+        )
 
         field_analysis[field_name] = {
             "column_name": col,
