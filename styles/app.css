@@ -215,6 +215,19 @@
     color: #856404;
 }
 
+/* ── Utility classes ────────────────────────────────────────────────── */
+
+.text-sm-muted {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.text-xs-muted {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-align: center;
+}
+
 /* ── Hide Streamlit branding ───────────────────────────────────────── */
 
 #MainMenu { visibility: hidden; }

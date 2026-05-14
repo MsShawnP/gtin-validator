@@ -71,7 +71,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown(
-        '<p style="font-size:0.8rem; color:#6c757d; text-align:center;">'
+        '<p class="text-xs-muted">'
         'Built for specialty food brands.<br>'
         'Not affiliated with GS1, Walmart, or any retailer.'
         '</p>',
@@ -288,7 +288,7 @@ if gtins_to_validate:
         with dl_col1:
             st.markdown("**📄 CSV Report — Raw Data**")
             st.markdown(
-                '<p style="font-size:0.85rem; color:var(--text-muted);">'
+                '<p class="text-sm-muted">'
                 'Row-by-row validation results in spreadsheet format. '
                 'Includes each GTIN, its status, issue codes, and corrected values. '
                 'Best for importing into Excel or your own systems for further analysis.'
@@ -308,7 +308,7 @@ if gtins_to_validate:
         with dl_col2:
             st.markdown("**📑 PDF Report — Full Diagnostic**")
             st.markdown(
-                '<p style="font-size:0.85rem; color:var(--text-muted);">'
+                '<p class="text-sm-muted">'
                 'Branded, professional report with readiness score, retailer-specific '
                 'checklists, cost-of-inaction estimates, and prioritized issue detail. '
                 'Designed to hand directly to your operations team, broker, or trading partner coordinator.'
@@ -486,7 +486,7 @@ if gtins_to_validate:
 
             exec_summary = generate_executive_summary(validation_data)
             st.markdown(
-                f'<div class="security-box" style="border-color:var(--border-color);">'
+                f'<div class="security-box">'
                 f'{exec_summary.replace(chr(10)+chr(10), "<br><br>")}'
                 f'</div>',
                 unsafe_allow_html=True,
@@ -556,7 +556,7 @@ if gtins_to_validate:
                 st.markdown(f"""
                 <div class="retailer-card {ready_class}">
                     <strong>{retailer_name}</strong> — {status_text}<br>
-                    <small style="color:#6c757d;">{checklist['profile']['description']}</small>
+                    <small class="text-sm-muted">{checklist['profile']['description']}</small>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -678,7 +678,7 @@ if gtins_to_validate:
                     overall = completeness["overall_completeness"]
                     overall_color = "#28a745" if overall >= 80 else ("#ffc107" if overall >= 50 else "#dc3545")
                     st.markdown(
-                        f'<div class="stat-card" style="text-align:center;">'
+                        f'<div class="stat-card">'
                         f'<div class="stat-number" style="color:{overall_color} !important;">'
                         f'{overall}%</div>'
                         f'<div class="stat-label">Overall Data Completeness</div></div>',
