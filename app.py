@@ -29,7 +29,7 @@ st.set_page_config(
     page_title="GTIN Product Data Validator",
     page_icon="📦",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 # ---------------------------------------------------------------------------
@@ -40,43 +40,33 @@ load_css()
 
 
 # ---------------------------------------------------------------------------
-# Header
-# ---------------------------------------------------------------------------
-
-st.markdown("# 📦 GTIN Product Data Validator")
-st.markdown(
-    "Validate your product GTINs against GS1 standards and retailer requirements. "
-    "Built for operations teams at specialty food brands preparing for national retail."
-)
-
-# ---------------------------------------------------------------------------
-# Sidebar — input + settings
+# Sidebar — settings
 # ---------------------------------------------------------------------------
 
 with st.sidebar:
-    st.markdown("### How to use")
-    st.markdown(
-        "1. Paste GTINs or upload a CSV file\n"
-        "2. Review your readiness score\n"
-        "3. Check retailer-specific requirements\n"
-        "4. Download your report"
-    )
+    st.markdown("### Settings")
 
-    st.markdown("---")
-
-    # Company name for branding
     company_name = st.text_input(
         "Your company name (optional)",
         placeholder="e.g., Cedar Hollow Provisions",
         help="Used to brand your PDF report.",
     )
 
-    # Retailer filter
     st.markdown("### Filter by retailer")
     selected_retailer = st.selectbox(
         "Show requirements for:",
         ["All Retailers"] + list(RETAILER_PROFILES.keys()),
         help="Filter the checklist to show requirements for a specific retailer.",
+    )
+
+    st.markdown("---")
+
+    st.markdown("#### How it works")
+    st.markdown(
+        "1. Upload your GTINs or try sample data\n"
+        "2. Review your readiness score\n"
+        "3. Check retailer-specific requirements\n"
+        "4. Download your branded report"
     )
 
     st.markdown("---")
@@ -90,33 +80,75 @@ with st.sidebar:
 
 
 # ---------------------------------------------------------------------------
+# Hero section
+# ---------------------------------------------------------------------------
+
+if not st.session_state.get("validated"):
+    st.markdown(
+        '<div class="hero">'
+        '<h1>Validate your product GTINs in seconds</h1>'
+        '<p class="subtitle">'
+        'Find data quality issues before retailers do. Check your GTINs against '
+        'GS1 format standards and retailer requirement rules &mdash; get a readiness '
+        'score, prioritized fix plan, and branded PDF report.'
+        '</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="hero-checks">'
+        '<div class="hero-check">'
+        '<strong>What this checks</strong>'
+        '<p>GS1 format standards (check digits, lengths, structure), '
+        'retailer submission rules (Walmart, Costco, UNFI format needs), '
+        'packaging hierarchy, and duplicate detection.</p>'
+        '</div>'
+        '<div class="hero-check">'
+        '<strong>What this does NOT do</strong>'
+        '<p>This does not look up GTINs in retailer databases or verify '
+        'product assignments. It validates your data format and structure '
+        '&mdash; a pre-flight check before you submit.</p>'
+        '</div>'
+        '<div class="hero-check">'
+        '<strong>What you\'ll need</strong>'
+        '<p>A list of GTINs &mdash; upload a CSV file or paste them directly. '
+        'No account needed, no data stored.</p>'
+        '</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+else:
+    st.markdown("# GTIN Product Data Validator")
+
+
+# ---------------------------------------------------------------------------
 # Input section
 # ---------------------------------------------------------------------------
 
+if "input_method" not in st.session_state:
+    st.session_state["input_method"] = None
+
 st.markdown("---")
 
-input_method = st.radio(
-    "Choose input method:",
-    ["Paste GTINs", "Upload CSV", "Try sample data"],
-    horizontal=True,
-)
+col_upload, col_sample = st.columns(2)
+with col_upload:
+    if st.button("Upload your GTINs", type="primary", use_container_width=True):
+        st.session_state["input_method"] = "upload"
+        st.session_state["validated"] = False
+        st.session_state.pop("validation_data_cache", None)
+with col_sample:
+    if st.button("Try with sample data", use_container_width=True):
+        st.session_state["input_method"] = "sample"
+        st.session_state["validated"] = False
+        st.session_state.pop("validation_data_cache", None)
 
 gtins_to_validate = []
-uploaded_df = None  # Store full DataFrame for data completeness check
+uploaded_df = None
 
-if input_method == "Paste GTINs":
-    gtin_input = st.text_area(
-        "Paste your GTINs (one per line):",
-        height=200,
-        placeholder="614141000012\n614141000029\n614141000036\n...",
-    )
-    if gtin_input.strip():
-        gtins_to_validate = [
-            line.strip() for line in gtin_input.strip().split("\n")
-            if line.strip()
-        ]
+input_method = st.session_state.get("input_method")
 
-elif input_method == "Upload CSV":
+if input_method == "upload":
     uploaded_file = st.file_uploader(
         "Upload a CSV file with a GTIN column:",
         type=["csv"],
@@ -125,8 +157,7 @@ elif input_method == "Upload CSV":
     if uploaded_file:
         try:
             df = pd.read_csv(uploaded_file, dtype=str)
-            uploaded_df = df  # Save for data completeness
-            # Auto-detect GTIN column
+            uploaded_df = df
             gtin_col = None
             for col in df.columns:
                 if any(term in col.lower() for term in ["gtin", "upc", "ean", "barcode", "code"]):
@@ -145,13 +176,34 @@ elif input_method == "Upload CSV":
         except Exception as e:
             st.error(f"Error reading CSV: {e}")
 
-elif input_method == "Try sample data":
+    with st.expander("Or paste GTINs manually"):
+        gtin_input = st.text_area(
+            "Paste your GTINs (one per line):",
+            height=150,
+            placeholder="614141000012\n614141000029\n614141000036\n...",
+        )
+        if gtin_input.strip():
+            gtins_to_validate = [
+                line.strip() for line in gtin_input.strip().split("\n")
+                if line.strip()
+            ]
+
+elif input_method == "sample":
+    st.markdown(
+        '<div class="sample-banner">'
+        'You\'re viewing <strong>sample data</strong> &mdash; '
+        'upload your own file to validate your GTINs.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
     st.markdown(SAMPLE_DESCRIPTION)
     sample_df = pd.read_csv(StringIO(SAMPLE_DATA.strip()), dtype=str)
-    uploaded_df = sample_df  # Save for data completeness
+    uploaded_df = sample_df
     st.dataframe(sample_df, use_container_width=True, height=300)
     gtins_to_validate = sample_df["GTIN"].dropna().tolist()
-    st.info(f"Loaded {len(gtins_to_validate)} sample GTINs")
+
+else:
+    st.caption("Choose an option above to get started.")
 
 
 # ---------------------------------------------------------------------------
@@ -713,46 +765,22 @@ if gtins_to_validate:
             unsafe_allow_html=True,
         )
 
-else:
-    # No data loaded yet — show explainer
-    st.markdown("---")
-    st.markdown("### What this tool checks")
+# ---------------------------------------------------------------------------
+# Footer — security & privacy
+# ---------------------------------------------------------------------------
 
-    col_a, col_b, col_c = st.columns(3)
-
-    with col_a:
-        st.markdown("#### 🔢 Format & Structure")
-        st.markdown(
-            "Valid GTIN lengths (8, 12, 13, 14 digits), numeric-only, "
-            "correct check digits using GS1's mod-10 algorithm."
-        )
-
-    with col_b:
-        st.markdown("#### 🏪 Retailer Requirements")
-        st.markdown(
-            "Walmart Item 360, Costco, UNFI, KeHE, Whole Foods, "
-            "1WorldSync — each has specific GTIN format and hierarchy requirements."
-        )
-
-    with col_c:
-        st.markdown("#### 📦 Packaging Hierarchy")
-        st.markdown(
-            "Detects unit-to-case GTIN relationships, orphan case codes, "
-            "and missing packaging levels that will block retail setup."
-        )
-
-    st.markdown("---")
-    st.markdown(
-        '<div class="security-box">'
-        '<strong>🔒 Your Data Stays Yours</strong><br><br>'
-        'This tool processes your GTINs entirely within your browser session. '
-        'No product data is stored, logged, transmitted to third parties, or retained after you close this page. '
-        'There is no database behind this tool — nothing is saved, period.<br><br>'
-        'Your data is never used for training, analytics, or any purpose beyond generating '
-        'your validation results in this session. When you close the tab, your data is gone.<br><br>'
-        '<small style="color:var(--text-muted);">This tool runs on Streamlit Community Cloud. '
-        'Streamlit\'s infrastructure processes the request but does not persist application data between sessions. '
-        'For details, see <a href="https://streamlit.io/privacy-policy">Streamlit\'s privacy policy</a>.</small>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
+st.markdown("---")
+st.markdown(
+    '<div class="security-box">'
+    '<strong>Your Data Stays Yours</strong><br><br>'
+    'This tool processes your GTINs entirely within your browser session. '
+    'No product data is stored, logged, transmitted to third parties, or retained after you close this page. '
+    'There is no database behind this tool &mdash; nothing is saved, period.<br><br>'
+    'Your data is never used for training, analytics, or any purpose beyond generating '
+    'your validation results in this session. When you close the tab, your data is gone.<br><br>'
+    '<small style="color:#6c757d;">This tool runs on Streamlit Community Cloud. '
+    "Streamlit's infrastructure processes the request but does not persist application data between sessions. "
+    'For details, see <a href="https://streamlit.io/privacy-policy">Streamlit\'s privacy policy</a>.</small>'
+    '</div>',
+    unsafe_allow_html=True,
+)
