@@ -1,0 +1,267 @@
+/* GTIN Validator — Custom Component Styles
+   Theme tokens (colors, fonts, radii) are set in .streamlit/config.toml.
+   This file handles component-level styling that config.toml can't express. */
+
+/* ── Score card ────────────────────────────────────────────────────── */
+
+.score-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.score-number {
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+    color: white !important;
+}
+
+.score-grade {
+    font-size: 1.2rem;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+    color: white !important;
+}
+
+.score-interp {
+    font-size: 0.95rem;
+    opacity: 0.7;
+    color: white !important;
+}
+
+/* ── Stat cards ────────────────────────────────────────────────────── */
+
+.stat-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    background: #f0f1f3;
+    border-radius: 12px;
+    padding: 1.25rem;
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+    border: 1px solid #d0d3d8;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a2e !important;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #6c757d !important;
+    margin-top: 0.25rem;
+}
+
+.stat-critical .stat-number { color: #dc3545 !important; }
+.stat-warning .stat-number { color: #ffc107 !important; }
+.stat-clean .stat-number { color: #28a745 !important; }
+
+/* ── Retailer checklist ────────────────────────────────────────────── */
+
+.retailer-card {
+    background: #f5f5f5;
+    border: 1px solid #d0d3d8;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.retailer-ready { border-left: 4px solid #28a745; }
+.retailer-not-ready { border-left: 4px solid #dc3545; }
+.check-pass { color: #28a745 !important; }
+.check-fail { color: #dc3545 !important; }
+
+/* ── Cost card ─────────────────────────────────────────────────────── */
+
+.cost-card {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+    border: 1px solid #ffc107;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.cost-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #856404 !important;
+}
+
+/* ── Issue badges ──────────────────────────────────────────────────── */
+
+.badge-critical, .badge-critical * {
+    background: #dc3545;
+    color: #ffffff !important;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-warning, .badge-warning * {
+    background: #ffc107;
+    color: #1a1a2e !important;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-info, .badge-info * {
+    background: #17a2b8;
+    color: #ffffff !important;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* ── Security / disclaimer boxes ───────────────────────────────────── */
+
+.security-box {
+    background: #e8f5e9;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-top: 1rem;
+}
+
+.security-box-compact {
+    background: #e8f5e9;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+/* ── Hero section ──────────────────────────────────────────────────── */
+
+.hero {
+    text-align: center;
+    padding: 2rem 1rem 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.hero h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 0.5rem;
+}
+
+.hero .subtitle {
+    font-size: 1.1rem;
+    color: #4a4a5a;
+    max-width: 700px;
+    margin: 0 auto 1.5rem;
+    line-height: 1.5;
+}
+
+.hero-checks {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.hero-check {
+    background: #f5f5f5;
+    border: 1px solid #d0d3d8;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    flex: 1;
+    min-width: 200px;
+    max-width: 280px;
+    text-align: left;
+}
+
+.hero-check strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #1a1a2e;
+}
+
+.hero-check p {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* ── Sample data banner ────────────────────────────────────────────── */
+
+.sample-banner {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #856404;
+}
+
+/* ── Hide Streamlit branding ───────────────────────────────────────── */
+
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+
+/* ── Cleaner tabs ──────────────────────────────────────────────────── */
+
+.stTabs [data-baseweb="tab-list"] { gap: 2px; }
+.stTabs [data-baseweb="tab"] { padding: 10px 20px; }
+
+/* ── Hide Ctrl+Enter instruction inside forms ──────────────────────── */
+
+[data-testid="InputInstructions"] { display: none !important; }
+
+/* ── Mobile responsive ─────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .score-number { font-size: 2.5rem; }
+    .score-card { padding: 1.5rem; }
+
+    .stat-card { padding: 1rem; }
+    .stat-number { font-size: 1.5rem; }
+
+    .hero h1 { font-size: 1.5rem; }
+    .hero .subtitle { font-size: 1rem; }
+    .hero-check { min-width: 160px; }
+
+    .cost-card { padding: 1rem; }
+    .cost-number { font-size: 1.25rem; }
+
+    .retailer-card { padding: 1rem; }
+}
+
+@media (max-width: 480px) {
+    .score-number { font-size: 2rem; }
+    .score-card { padding: 1rem; border-radius: 12px; }
+
+    .stat-row { gap: 0.5rem; }
+    .stat-card { min-width: 120px; padding: 0.75rem; }
+    .stat-number { font-size: 1.25rem; }
+
+    .hero-checks { gap: 0.75rem; }
+    .hero-check { min-width: 100%; }
+
+    .badge-critical, .badge-warning, .badge-info,
+    .badge-critical *, .badge-warning *, .badge-info * {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+}
