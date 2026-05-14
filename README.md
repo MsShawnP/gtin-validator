@@ -1,4 +1,4 @@
-# 📦 GTIN Product Data Validator
+# GTIN Product Data Validator
 
 A diagnostic tool for specialty food brands preparing product data for retailer submission. Validates GTINs against GS1 standards with retailer-specific context — built for operations teams, not developers.
 
@@ -42,9 +42,11 @@ This tool gives you a clear picture in 60 seconds.
 
 ## Run locally
 
+Requires Python 3.10+ and Streamlit 1.53+.
+
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/gtin-validator.git
+git clone https://github.com/MsShawnP/gtin-validator.git
 cd gtin-validator
 
 # Install dependencies
@@ -52,6 +54,9 @@ pip install -r requirements.txt
 
 # Run the app
 streamlit run app.py
+
+# Run tests
+python -m pytest tests.py -v
 ```
 
 ## Deploy to Streamlit Community Cloud
@@ -73,7 +78,12 @@ gtin-validator/
 ├── csv_report.py       # CSV export
 ├── pdf_report.py       # Branded PDF report (reportlab)
 ├── sample_data.py      # Realistic sample data
+├── ui_helpers.py       # CSS loader and UI utilities
+├── tests.py            # pytest test suite
 ├── requirements.txt
+├── pyproject.toml      # Project metadata
+├── styles/
+│   └── app.css         # Custom component CSS
 ├── .streamlit/
 │   └── config.toml     # Theme configuration
 └── README.md
@@ -102,4 +112,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-*Built as a portfolio piece demonstrating product data consulting for specialty food brands. For a comprehensive Product Data Health Audit for your brand, [get in touch](mailto:YOUR_EMAIL).*
+*Built as a portfolio piece demonstrating product data consulting for specialty food brands. For a comprehensive Product Data Health Audit for your brand, [get in touch](mailto:msshawnp@gmail.com).*

@@ -1,0 +1,19 @@
+[project]
+name = "gtin-validator"
+version = "1.0.0"
+description = "A diagnostic tool for specialty food brands preparing product data for retailer submission"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "streamlit>=1.53.0",
+    "pandas>=2.0.0",
+    "reportlab>=4.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
