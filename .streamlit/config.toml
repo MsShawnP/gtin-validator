@@ -4,9 +4,6 @@ backgroundColor = "#eaecee"
 secondaryBackgroundColor = "#e0e2e5"
 textColor = "#1a1a2e"
 font = "sans serif"
-borderColor = "#d0d3d8"
-baseRadius = 0.75
-buttonRadius = 0.5
 
 [server]
 maxUploadSize = 10
