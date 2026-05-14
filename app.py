@@ -177,12 +177,16 @@ if input_method == "upload":
             st.error(f"Error reading CSV: {e}")
 
     with st.expander("Or paste GTINs manually"):
-        gtin_input = st.text_area(
-            "Paste your GTINs (one per line):",
-            height=150,
-            placeholder="614141000012\n614141000029\n614141000036\n...",
-        )
-        if gtin_input.strip():
+        with st.form("gtin_paste_form"):
+            gtin_input = st.text_area(
+                "Paste your GTINs (one per line):",
+                height=150,
+                placeholder="614141000012\n614141000029\n614141000036\n...",
+            )
+            paste_submitted = st.form_submit_button(
+                "Validate GTINs", type="primary", use_container_width=True,
+            )
+        if paste_submitted and gtin_input.strip():
             gtins_to_validate = [
                 line.strip() for line in gtin_input.strip().split("\n")
                 if line.strip()
@@ -211,38 +215,29 @@ else:
 # ---------------------------------------------------------------------------
 
 if gtins_to_validate:
-    # Store GTINs in session state so dark mode toggle doesn't lose them
     st.session_state["gtins_to_validate"] = gtins_to_validate
     if uploaded_df is not None:
         st.session_state["uploaded_df"] = uploaded_df
 
-# Recover from session state if input was lost (e.g., after dark mode toggle)
+# Recover from session state if input was lost on rerun
 if not gtins_to_validate and st.session_state.get("validated") and st.session_state.get("gtins_to_validate"):
     gtins_to_validate = st.session_state["gtins_to_validate"]
     uploaded_df = st.session_state.get("uploaded_df", uploaded_df)
 
 if gtins_to_validate:
-    btn_col1, btn_col2 = st.columns([3, 1])
-    with btn_col1:
-        validate_btn = st.button("🔍 Validate GTINs", type="primary", use_container_width=True)
-    with btn_col2:
-        reset_btn = st.button("🔄 Reset", use_container_width=True)
-
-    if reset_btn:
+    if st.button("Start over", use_container_width=False):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.rerun()
 
-    if validate_btn or st.session_state.get("validated"):
-        st.session_state["validated"] = True
+    st.session_state["validated"] = True
 
-        # Use cached validation data if available, otherwise validate
-        if validate_btn or "validation_data_cache" not in st.session_state:
-            with st.spinner("Validating your GTINs against GS1 standards..."):
-                validation_data = validate_batch(gtins_to_validate)
-                st.session_state["validation_data_cache"] = validation_data
-        else:
-            validation_data = st.session_state["validation_data_cache"]
+    if "validation_data_cache" not in st.session_state:
+        with st.spinner("Validating your GTINs against GS1 standards..."):
+            validation_data = validate_batch(gtins_to_validate)
+            st.session_state["validation_data_cache"] = validation_data
+    else:
+        validation_data = st.session_state["validation_data_cache"]
 
         summary = validation_data["summary"]
         score = validation_data["score"]
