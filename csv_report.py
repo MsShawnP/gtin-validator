@@ -8,6 +8,19 @@ from io import StringIO
 from gtin_core import Severity
 
 
+# Characters that trigger formula evaluation when a CSV is opened in
+# Excel, LibreOffice Calc, or Google Sheets. Prefixing cells that start
+# with one of these with a leading apostrophe neutralizes the formula.
+_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _sanitize_cell(value):
+    """Neutralize CSV/spreadsheet formula injection on user-controlled cells."""
+    if isinstance(value, str) and value and value[0] in _FORMULA_PREFIXES:
+        return "'" + value
+    return value
+
+
 def generate_csv_report(validation_data: dict) -> str:
     """Generate a CSV report string from validation results."""
     output = StringIO()
@@ -57,18 +70,18 @@ def generate_csv_report(validation_data: dict) -> str:
 
         writer.writerow([
             r.row_number,
-            r.raw_input,
-            r.cleaned,
+            _sanitize_cell(r.raw_input),
+            _sanitize_cell(r.cleaned),
             "Yes" if r.is_valid else "No",
             r.gtin_type.value,
             highest_severity,
             len(r.issues),
-            issues_text,
-            recommendations_text,
-            impact_text,
-            r.corrected_value or "",
-            r.company_prefix or "",
-            r.indicator_digit or "",
+            _sanitize_cell(issues_text),
+            _sanitize_cell(recommendations_text),
+            _sanitize_cell(impact_text),
+            _sanitize_cell(r.corrected_value or ""),
+            _sanitize_cell(r.company_prefix or ""),
+            _sanitize_cell(r.indicator_digit or ""),
         ])
 
     return output.getvalue()

@@ -15,7 +15,19 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from io import BytesIO
 from datetime import datetime
 from collections import defaultdict
+from xml.sax.saxutils import escape as _xml_escape
+
 from gtin_core import Severity
+
+
+def _escape(value) -> str:
+    """Escape user-supplied text before embedding in a ReportLab Paragraph.
+
+    ReportLab parses inline XML/HTML-style markup in Paragraph strings,
+    so any `<`, `>`, or `&` from user input would corrupt rendering or
+    inject unintended markup.
+    """
+    return _xml_escape("" if value is None else str(value))
 
 
 # Colors
@@ -29,7 +41,7 @@ RED = colors.HexColor("#dc3545")
 WHITE = colors.white
 
 # Approximate page height available for content (letter = 792pt, minus margins and buffer)
-PAGE_CONTENT_HEIGHT = 792 - (0.75 * 72 * 2) - 40  # ~600pt usable
+PAGE_CONTENT_HEIGHT = 792 - (0.75 * 72 * 2) - 40  # ~644pt usable
 
 
 def severity_color(severity):
@@ -122,8 +134,7 @@ def generate_pdf_report(validation_data: dict, company_name: str = "") -> BytesI
     # --- Title page content ---
     report_title = "Product Data Validation Report"
     if company_name:
-        report_title = f"Product Data Validation Report"
-        elements.append(Paragraph(company_name, ParagraphStyle(
+        elements.append(Paragraph(_escape(company_name), ParagraphStyle(
             "CompanyName", parent=styles["Normal"],
             fontSize=12, textColor=ACCENT, spaceAfter=4,
         )))
@@ -295,7 +306,7 @@ def generate_pdf_report(validation_data: dict, company_name: str = "") -> BytesI
                 ))
                 for row_num, raw_input in failing:
                     block.append(Paragraph(
-                        f'Row {row_num}: {raw_input}',
+                        f'Row {row_num}: {_escape(raw_input)}',
                         ParagraphStyle("FailItem", parent=small_style, fontSize=8,
                                        leftIndent=40),
                     ))
@@ -348,17 +359,17 @@ def generate_pdf_report(validation_data: dict, company_name: str = "") -> BytesI
         block = []
         block.append(Paragraph(
             f'<font color="{label_color.hexval()}">●</font> '
-            f'Row {r.row_number}: <b>{r.raw_input}</b> '
-            f'({r.gtin_type.value if r.gtin_type.value != "Unknown" else "Unknown format"})',
+            f'Row {r.row_number}: <b>{_escape(r.raw_input)}</b> '
+            f'({_escape(r.gtin_type.value) if r.gtin_type.value != "Unknown" else "Unknown format"})',
             ParagraphStyle("ItemHeader", parent=body_style, fontSize=10, spaceBefore=10),
         ))
         for issue in r.issues:
             block.append(Paragraph(
-                f'<b>[{issue.severity.value}]</b> {issue.message}',
+                f'<b>[{issue.severity.value}]</b> {_escape(issue.message)}',
                 ParagraphStyle("IssueMsg", parent=body_style, fontSize=9, leftIndent=20),
             ))
             block.append(Paragraph(
-                f'<i>Fix: {issue.recommendation}</i>',
+                f'<i>Fix: {_escape(issue.recommendation)}</i>',
                 ParagraphStyle("IssueFix", parent=small_style, leftIndent=20),
             ))
         return block

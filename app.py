@@ -293,6 +293,10 @@ input_method = st.radio(
 gtins_to_validate = []
 uploaded_df = None  # Store full DataFrame for data completeness check
 
+# Hard cap on rows we will validate from any input source. Keeps Streamlit
+# responsive when someone pastes (or uploads) a huge list by accident.
+MAX_GTINS_PER_BATCH = 50_000
+
 if input_method == "Paste GTINs":
     gtin_input = st.text_area(
         "Paste your GTINs (one per line):",
@@ -300,10 +304,18 @@ if input_method == "Paste GTINs":
         placeholder="614141000012\n614141000029\n614141000036\n...",
     )
     if gtin_input.strip():
-        gtins_to_validate = [
+        parsed_lines = [
             line.strip() for line in gtin_input.strip().split("\n")
             if line.strip()
         ]
+        if len(parsed_lines) > MAX_GTINS_PER_BATCH:
+            st.error(
+                f"Too many GTINs ({len(parsed_lines):,}). The current limit "
+                f"is {MAX_GTINS_PER_BATCH:,} per batch — please split your "
+                "list and validate it in chunks."
+            )
+        else:
+            gtins_to_validate = parsed_lines
 
 elif input_method == "Upload CSV":
     uploaded_file = st.file_uploader(
@@ -329,10 +341,20 @@ elif input_method == "Upload CSV":
             else:
                 st.info(f"Auto-detected GTIN column: **{gtin_col}**")
 
-            gtins_to_validate = df[gtin_col].dropna().tolist()
-            st.success(f"Loaded {len(gtins_to_validate)} GTINs from '{gtin_col}'")
-        except Exception as e:
+            parsed_lines = df[gtin_col].dropna().tolist()
+            if len(parsed_lines) > MAX_GTINS_PER_BATCH:
+                st.error(
+                    f"Too many GTINs ({len(parsed_lines):,}). The current "
+                    f"limit is {MAX_GTINS_PER_BATCH:,} per batch — please "
+                    "split your file and validate it in chunks."
+                )
+            else:
+                gtins_to_validate = parsed_lines
+                st.success(f"Loaded {len(gtins_to_validate)} GTINs from '{gtin_col}'")
+        except (pd.errors.ParserError, UnicodeDecodeError, ValueError) as e:
             st.error(f"Error reading CSV: {e}")
+        except Exception as e:
+            st.error(f"Unexpected error reading CSV: {e}")
 
 elif input_method == "Try sample data":
     st.markdown(SAMPLE_DESCRIPTION)
