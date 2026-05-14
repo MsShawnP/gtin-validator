@@ -5,6 +5,7 @@ Run with: python -m pytest tests.py -v
 """
 
 import pytest
+import pandas as pd
 from gtin_core import (
     calculate_check_digit,
     identify_gtin_type,
@@ -15,6 +16,7 @@ from gtin_core import (
     generate_executive_summary,
     generate_fix_roadmap,
     generate_gtin14_suggestions,
+    check_data_completeness,
     GTINType,
     Severity,
 )
@@ -298,3 +300,89 @@ class TestGTIN14Suggestions:
             data["results"], data["hierarchy"]
         )
         assert len(suggestions) == 0
+
+
+# =========================================================================
+# Edge cases
+# =========================================================================
+
+class TestEdgeCases:
+    def test_dashes_only_cleans_to_empty(self):
+        result = validate_single_gtin("---", row_number=1)
+        assert not result.is_valid
+        assert result.has_critical
+        assert result.issues[0].code == "EMPTY"
+
+    def test_spaces_only_cleans_to_empty(self):
+        result = validate_single_gtin("   ", row_number=1)
+        assert not result.is_valid
+        assert result.issues[0].code == "EMPTY"
+
+    def test_single_gtin_batch(self):
+        data = validate_batch(["614141000012"])
+        assert data["summary"]["total_gtins"] == 1
+        assert 0 <= data["score"]["score"] <= 100
+        assert data["cost_estimate"] is not None
+
+    def test_all_duplicates_batch(self):
+        data = validate_batch(["614141000012"] * 5)
+        assert data["summary"]["total_gtins"] == 5
+        assert data["summary"]["duplicate_groups"] >= 1
+        for r in data["results"]:
+            assert any(i.code == "DUPLICATE" for i in r.issues)
+
+
+# =========================================================================
+# Retailer checklists (via validate_batch)
+# =========================================================================
+
+class TestRetailerChecklists:
+    def test_checklists_returned_for_all_retailers(self):
+        data = validate_batch(["614141000012"])
+        checklists = data["retailer_checklists"]
+        assert "Walmart" in checklists
+        assert "Costco" in checklists
+        assert "UNFI" in checklists
+
+    def test_checklist_structure(self):
+        data = validate_batch(["614141000012"])
+        for name, checklist in data["retailer_checklists"].items():
+            assert "ready" in checklist
+            assert "checks" in checklist
+            assert "passed" in checklist
+            assert "total" in checklist
+            assert isinstance(checklist["checks"], list)
+
+    def test_clean_data_passes_basic_checks(self):
+        data = validate_batch(["0614141000012"])  # valid GTIN-13
+        checklists = data["retailer_checklists"]
+        for name, checklist in checklists.items():
+            assert checklist["passed"] > 0
+
+
+# =========================================================================
+# Data completeness
+# =========================================================================
+
+class TestDataCompleteness:
+    def test_basic_completeness(self):
+        df = pd.DataFrame({
+            "GTIN": ["614141000012"],
+            "Product Name": ["Test Product"],
+            "Brand": ["Test Brand"],
+        })
+        result = check_data_completeness(df)
+        assert "field_analysis" in result
+        assert "missing_important_fields" in result
+        assert "retailer_data_gaps" in result
+        assert "overall_completeness" in result
+
+    def test_missing_fields_detected(self):
+        df = pd.DataFrame({"GTIN": ["614141000012"]})
+        result = check_data_completeness(df)
+        assert len(result["missing_important_fields"]) > 0
+
+    def test_empty_dataframe(self):
+        df = pd.DataFrame({"GTIN": pd.Series(dtype=str)})
+        result = check_data_completeness(df)
+        assert result["overall_completeness"] == 0
