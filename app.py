@@ -259,35 +259,26 @@ if gtins_to_validate:
         """, unsafe_allow_html=True)
 
         # === SUMMARY STATS ===
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.markdown(f"""
+        st.markdown(f"""
+        <div class="stat-row">
             <div class="stat-card">
                 <div class="stat-number">{summary["total_gtins"]}</div>
                 <div class="stat-label">Total GTINs</div>
             </div>
-            """, unsafe_allow_html=True)
-        with col2:
-            st.markdown(f"""
             <div class="stat-card stat-critical">
                 <div class="stat-number">{summary["critical_issues"]}</div>
                 <div class="stat-label">Critical Issues</div>
             </div>
-            """, unsafe_allow_html=True)
-        with col3:
-            st.markdown(f"""
             <div class="stat-card stat-warning">
                 <div class="stat-number">{summary["warnings"]}</div>
                 <div class="stat-label">Warnings</div>
             </div>
-            """, unsafe_allow_html=True)
-        with col4:
-            st.markdown(f"""
             <div class="stat-card stat-clean">
                 <div class="stat-number">{summary["clean"]}</div>
                 <div class="stat-label">Clean</div>
             </div>
-            """, unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
 
         # === DOWNLOAD VALIDATION REPORTS (above results) ===
         st.markdown("### 📥 Download Validation Reports")
