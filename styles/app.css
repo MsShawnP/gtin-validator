@@ -81,8 +81,7 @@
 
 .retailer-ready { border-left: 4px solid #28a745; }
 .retailer-not-ready { border-left: 4px solid #dc3545; }
-.check-pass { color: #28a745 !important; }
-.check-fail { color: #dc3545 !important; }
+
 
 /* ── Cost card ─────────────────────────────────────────────────────── */
 
@@ -139,13 +138,6 @@
     margin-top: 1rem;
 }
 
-.security-box-compact {
-    background: #e8f5e9;
-    border: 1px solid #c3e6cb;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-top: 1rem;
-}
 
 /* ── Hero section ──────────────────────────────────────────────────── */
 

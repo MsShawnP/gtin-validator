@@ -18,7 +18,7 @@ from gtin_core import (
 from csv_report import generate_csv_report
 from pdf_report import generate_pdf_report
 from sample_data import SAMPLE_DATA, SAMPLE_DESCRIPTION
-from ui_helpers import load_css
+from pathlib import Path
 
 
 # ---------------------------------------------------------------------------
@@ -36,7 +36,8 @@ st.set_page_config(
 # Custom CSS
 # ---------------------------------------------------------------------------
 
-load_css()
+_css = (Path(__file__).parent / "styles" / "app.css").read_text()
+st.html(f"<style>{_css}</style>")
 
 
 # ---------------------------------------------------------------------------
@@ -189,6 +190,9 @@ if input_method == "upload":
                 line.strip() for line in gtin_input.strip().split("\n")
                 if line.strip()
             ]
+            uploaded_df = None
+            st.session_state.pop("validation_data_cache", None)
+            st.session_state.pop("uploaded_df", None)
 
 elif input_method == "sample":
     st.markdown(
@@ -224,16 +228,17 @@ if not gtins_to_validate and st.session_state.get("validated") and st.session_st
 
 if gtins_to_validate:
     if st.button("Start over", use_container_width=False):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
+        st.session_state.clear()
         st.rerun()
 
     st.session_state["validated"] = True
 
-    if "validation_data_cache" not in st.session_state:
+    cached_gtins = st.session_state.get("_cached_gtins")
+    if "validation_data_cache" not in st.session_state or cached_gtins != gtins_to_validate:
         with st.spinner("Validating your GTINs against GS1 standards..."):
             validation_data = validate_batch(gtins_to_validate)
             st.session_state["validation_data_cache"] = validation_data
+            st.session_state["_cached_gtins"] = gtins_to_validate
     else:
         validation_data = st.session_state["validation_data_cache"]
 
@@ -731,24 +736,6 @@ if gtins_to_validate:
                 "spreadsheet to see which fields are missing or incomplete."
             )
 
-    # === SHARE & SECURITY ===
-    st.markdown("---")
-    st.markdown("### 🔗 Share Results")
-    st.info(
-        "To share these results, download the PDF report and send it to your team. "
-        "The branded report is designed to be forwarded to your operations team, broker, or "
-        "trading partner coordinator."
-    )
-
-    st.markdown(
-        '<div class="security-box-compact">'
-        '<strong>🔒 Your Data Stays Yours</strong> — '
-        'No product data is stored, logged, or transmitted to third parties. '
-        'Everything is processed in-session and discarded when you close this page.'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-
 # ---------------------------------------------------------------------------
 # Footer — security & privacy
 # ---------------------------------------------------------------------------
@@ -762,7 +749,7 @@ st.markdown(
     'There is no database behind this tool &mdash; nothing is saved, period.<br><br>'
     'Your data is never used for training, analytics, or any purpose beyond generating '
     'your validation results in this session. When you close the tab, your data is gone.<br><br>'
-    '<small style="color:#6c757d;">This tool runs on Streamlit Community Cloud. '
+    '<small class="text-sm-muted">This tool runs on Streamlit Community Cloud. '
     "Streamlit's infrastructure processes the request but does not persist application data between sessions. "
     'For details, see <a href="https://streamlit.io/privacy-policy">Streamlit\'s privacy policy</a>.</small>'
     '</div>',

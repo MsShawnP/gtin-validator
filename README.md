@@ -78,7 +78,6 @@ gtin-validator/
 ├── csv_report.py       # CSV export
 ├── pdf_report.py       # Branded PDF report (reportlab)
 ├── sample_data.py      # Realistic sample data
-├── ui_helpers.py       # CSS loader and UI utilities
 ├── tests.py            # pytest test suite
 ├── requirements.txt
 ├── pyproject.toml      # Project metadata
