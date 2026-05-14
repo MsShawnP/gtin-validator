@@ -42,16 +42,29 @@ This tool gives you a clear picture in 60 seconds.
 
 ## Run locally
 
+Requires Python 3.9+.
+
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/gtin-validator.git
+git clone https://github.com/MsShawnP/gtin-validator.git
 cd gtin-validator
+
+# (Optional) create a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
 # Run the app
 streamlit run app.py
+```
+
+## Run tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest tests.py -v
 ```
 
 ## Deploy to Streamlit Community Cloud
@@ -68,14 +81,17 @@ streamlit run app.py
 
 ```
 gtin-validator/
-├── app.py              # Streamlit UI
-├── gtin_core.py        # Validation engine, scoring, retailer rules
-├── csv_report.py       # CSV export
-├── pdf_report.py       # Branded PDF report (reportlab)
-├── sample_data.py      # Realistic sample data
-├── requirements.txt
+├── app.py                  # Streamlit UI
+├── gtin_core.py            # Validation engine, scoring, retailer rules
+├── csv_report.py           # CSV export
+├── pdf_report.py           # Branded PDF report (reportlab)
+├── sample_data.py          # Realistic sample data
+├── tests.py                # pytest suite
+├── requirements.txt        # Runtime dependencies
+├── requirements-dev.txt    # Test/development dependencies
+├── LICENSE                 # MIT
 ├── .streamlit/
-│   └── config.toml     # Theme configuration
+│   └── config.toml         # Theme configuration
 └── README.md
 ```
 
@@ -102,4 +118,4 @@ MIT
 
 ---
 
-*Built as a portfolio piece demonstrating product data consulting for specialty food brands. For a comprehensive Product Data Health Audit for your brand, [get in touch](mailto:YOUR_EMAIL).*
+*Built as a portfolio piece demonstrating product data consulting for specialty food brands. For a comprehensive Product Data Health Audit for your brand, [get in touch](mailto:Shawn@lailarallc.com).*
