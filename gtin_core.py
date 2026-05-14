@@ -375,7 +375,12 @@ def validate_single_gtin(raw, row_number: int) -> GTINResult:
         ))
 
     # --- Extract company prefix (approximate — real prefix length varies 7-10) ---
-    if gtin_type in (GTINType.GTIN_12, GTINType.GTIN_13):
+    # Normalize GTIN-12 and GTIN-14 onto the same GTIN-13 frame before
+    # slicing, so a unit/case pair (e.g. 614141000012 / 10614141000019)
+    # reports the same prefix and doesn't trip PREFIX_MISMATCH.
+    if gtin_type == GTINType.GTIN_12:
+        result.company_prefix = ("0" + cleaned)[:7]
+    elif gtin_type == GTINType.GTIN_13:
         result.company_prefix = cleaned[:7]
     elif gtin_type == GTINType.GTIN_14:
         result.company_prefix = cleaned[1:8]  # skip indicator digit
