@@ -128,7 +128,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "case, pallet). All GTINs are validated against the GS1 database. "
             "Items with invalid GTINs will not go live in Item 360."
         ),
-        "gtin14_format": "GTIN-14 preferred for case-level identification",
     },
     "Costco": {
         "description": "Costco Item Setup Workbook",
@@ -139,7 +138,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "Costco requires valid GTINs for all items. Dimension and weight "
             "discrepancies tied to wrong GTINs result in logistics chargebacks."
         ),
-        "gtin14_format": "GTIN-14 required for case/pallet levels",
     },
     "UNFI": {
         "description": "UNFI New Item Form",
@@ -150,7 +148,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "UNFI requires UPC for each sellable unit. Case GTIN needed for "
             "warehouse receiving. Incorrect GTINs delay item activation."
         ),
-        "gtin14_format": "Case GTIN required for distribution",
     },
     "Whole Foods": {
         "description": "Whole Foods Market Item Setup",
@@ -161,7 +158,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "Whole Foods requires valid UPC/EAN for each sellable unit. Items "
             "synced via 1WorldSync must have complete, accurate data."
         ),
-        "gtin14_format": "Not typically required at store level",
     },
     "KeHE": {
         "description": "KeHE Distributors Item Setup",
@@ -172,7 +168,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "KeHE requires UPC for each sellable unit and case GTIN for "
             "warehouse operations. Data synced via 1WorldSync."
         ),
-        "gtin14_format": "Case GTIN required for distribution",
     },
     "1WorldSync (GDSN)": {
         "description": "1WorldSync Global Data Synchronisation Network",
@@ -185,7 +180,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "configuration errors and logistics chargebacks. Wrong nutritional "
             "data creates legal exposure."
         ),
-        "gtin14_format": "Full hierarchy with indicator digits required",
     },
 }
 
@@ -194,7 +188,7 @@ RETAILER_PROFILES: dict[str, dict] = {
 # Single-GTIN validation
 # =============================================================================
 
-def validate_single_gtin(raw: str, row_number: int) -> GTINResult:
+def validate_single_gtin(raw, row_number: int) -> GTINResult:
     """
     Validate a single GTIN string against GS1 standards.
 
@@ -208,12 +202,25 @@ def validate_single_gtin(raw: str, row_number: int) -> GTINResult:
         7. UPC-A → GTIN-13 format advisory
 
     Args:
-        raw: The raw GTIN string as entered by the user.
+        raw: The raw GTIN value as entered by the user (string preferred;
+            None and pandas NaN are coerced to empty for graceful handling).
         row_number: 1-based row position in the input file.
 
     Returns:
         A GTINResult with all issues found.
     """
+    # Defensively coerce None / pandas NaN / non-string inputs to a string
+    # so we don't crash on .strip() when called from a DataFrame-driven flow.
+    if raw is None:
+        raw = ""
+    elif not isinstance(raw, str):
+        try:
+            if pd.isna(raw):
+                raw = ""
+            else:
+                raw = str(raw)
+        except (TypeError, ValueError):
+            raw = str(raw)
     cleaned = raw.strip().replace("-", "").replace(" ", "")
     result = GTINResult(
         raw_input=raw.strip(),
@@ -444,9 +451,11 @@ def validate_batch(gtins: list[str]) -> dict:
                     severity=Severity.WARNING,
                     code="PREFIX_MISMATCH",
                     message=(
-                        f"This GTIN's company prefix ({result.company_prefix}) differs from "
-                        f"the most common prefix in your file ({dominant_prefix}, used by "
-                        f"{dominant_count} of {len(prefixes)} GTINs)."
+                        f"This GTIN's company prefix (~{result.company_prefix}) differs from "
+                        f"the most common prefix in your file (~{dominant_prefix}, used by "
+                        f"{dominant_count} of {len(prefixes)} GTINs). "
+                        "Note: prefixes are detected heuristically using the first 7 digits; "
+                        "actual GS1 company prefix lengths vary from 7 to 10 digits."
                     ),
                     recommendation=(
                         "This could mean: (1) you acquired this product from another company, "

@@ -370,12 +370,13 @@ elif input_method == "Try sample data":
 # ---------------------------------------------------------------------------
 
 if gtins_to_validate:
-    # Store GTINs in session state so dark mode toggle doesn't lose them
+    # Persist the parsed input so it survives Streamlit reruns triggered by
+    # unrelated widget interactions.
     st.session_state["gtins_to_validate"] = gtins_to_validate
     if uploaded_df is not None:
         st.session_state["uploaded_df"] = uploaded_df
 
-# Recover from session state if input was lost (e.g., after dark mode toggle)
+# Recover the parsed input from session state when the current rerun lost it.
 if not gtins_to_validate and st.session_state.get("validated") and st.session_state.get("gtins_to_validate"):
     gtins_to_validate = st.session_state["gtins_to_validate"]
     uploaded_df = st.session_state.get("uploaded_df", uploaded_df)
