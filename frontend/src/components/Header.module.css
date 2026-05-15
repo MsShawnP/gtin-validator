@@ -1,0 +1,10 @@
+.header {
+  padding: var(--space-lg) 0;
+  text-align: center;
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+}

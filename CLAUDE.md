@@ -1,42 +1,69 @@
 # GTIN Product Data Validator
 
-Streamlit web app that validates GTINs against GS1 standards with retailer-specific context. Built for specialty food brands preparing product data for retailer submission.
+FastAPI + React web app that validates GTINs against GS1 standards with retailer-specific context. Built for specialty food brands preparing product data for retailer submission.
 
 ## Stack
 
-- **Python 3.10+** / Streamlit / pandas / reportlab
-- **Hosting:** Streamlit Community Cloud (auto-deploys from main)
-- **Tests:** pytest (`python -m pytest tests.py -v`)
-- **No backend, no database, no auth** — all processing is in-session
+- **Backend:** Python 3.10+ / FastAPI / pandas / reportlab
+- **Frontend:** React 19 / Vite / TypeScript (strict)
+- **Hosting:** Render free tier (Docker, auto-deploys from main)
+- **Tests:** pytest (`pytest tests.py -v` for core, `pytest tests_api.py -v` for API)
+- **No database, no auth** — in-memory cache with TTL for session state
 
 ## Key Files
 
 | File | Role |
 |------|------|
 | `gtin_core.py` | Validation engine, scoring, retailer rules, cost estimation |
-| `app.py` | Streamlit UI |
+| `backend/main.py` | FastAPI app, CORS, static file mount |
+| `backend/routes/` | API endpoints (validate, reports, sample, health) |
+| `backend/schemas/` | Pydantic request/response models |
+| `backend/serializers.py` | Dataclass-to-Pydantic conversion |
+| `backend/cache.py` | In-memory result cache (TTL 30 min, max 100) |
 | `pdf_report.py` | Branded PDF report (reportlab) |
 | `csv_report.py` | CSV export |
 | `sample_data.py` | Realistic demo dataset with intentional errors |
-| `tests.py` | pytest suite (50+ tests) |
-| `styles/app.css` | Custom component CSS |
-| `.streamlit/config.toml` | Theme and server config |
+| `tests.py` | Core engine tests (50+) |
+| `tests_api.py` | API endpoint tests (20) |
+| `frontend/src/` | React SPA (components, api, types, reducer) |
 
 ## Conventions
 
-- Core logic in `gtin_core.py` — no UI imports allowed there
+- Core logic in `gtin_core.py` — no UI or web framework imports allowed there
 - Report generators import from `gtin_core` only
 - Issue severities: CRITICAL (blocks submission), WARNING (will cause problems), INFO (advisory)
-- Custom CSS in `styles/app.css` — Streamlit HTML components use `unsafe_allow_html=True`
 - Retailer profiles are declarative dicts in `RETAILER_PROFILES`
+- CSS Modules with custom property tokens in `frontend/src/styles/`
+- Backend is a thin HTTP layer — no business logic in routes
 
 ## Running
 
 ```bash
-streamlit run app.py          # dev server on :8501
-python -m pytest tests.py -v  # run tests
+# Backend (dev)
+uvicorn backend.main:app --reload        # API on :8000
+
+# Frontend (dev)
+cd frontend && npm run dev               # Vite on :5173, proxies /api to :8000
+
+# Tests
+pytest tests.py -v                       # core engine
+pytest tests_api.py -v                   # API endpoints
+cd frontend && npm run build             # frontend type-check + build
+
+# Docker (production)
+docker build -t gtin . && docker run -p 8000:8000 gtin
 ```
 
-## Current Focus
+## API Endpoints
 
-Project improvement plan in PLAN.md — audit-driven improvements across code quality, testing, DevEx, and UX.
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/api/validate` | Validate pasted GTINs |
+| POST | `/api/validate/upload` | Validate from file upload |
+| GET | `/api/reports/csv/{token}` | Download CSV report |
+| GET | `/api/reports/corrected/{token}` | Download corrected GTINs |
+| GET | `/api/reports/pdf/{token}` | Download PDF report |
+| POST | `/api/completeness/{token}` | Data completeness analysis |
+| GET | `/api/sample` | Sample data + description |
+| GET | `/api/retailers` | Retailer profiles list |
+| GET | `/api/health` | Health check |
