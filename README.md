@@ -14,7 +14,8 @@ Most GTIN validators tell you "valid" or "invalid." This one tells you **why it 
 
 ### Features
 
-- **Batch validation** — paste GTINs or upload a CSV, validate your entire product list at once
+- **Batch validation** — paste GTINs or upload a CSV/Excel file, validate your entire product list at once
+- **Corrected GTIN download** — one-click CSV with auto-corrected check digits and cleaned formatting
 - **GS1 check digit validation** — mod-10 algorithm per GS1 General Specifications
 - **Format checking** — valid lengths (GTIN-8, 12, 13, 14), numeric-only, indicator digit rules
 - **Duplicate detection** — flags reused GTINs across different items
