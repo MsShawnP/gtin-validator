@@ -4,7 +4,7 @@
 
 A diagnostic tool for specialty food brands preparing product data for retailer submission. Validates GTINs against GS1 standards with retailer-specific context — built for operations teams, not developers.
 
-**[Try the live tool →](https://msshawnp-gtin-validator-app-yz0mxn.streamlit.app/)**
+**[Try the live tool →](https://gtin-validator.onrender.com)**
 
 ---
 
@@ -45,30 +45,42 @@ This tool gives you a clear picture in 60 seconds.
 
 ## Run locally
 
-Requires Python 3.10+ and Streamlit 1.53+.
+Requires Python 3.10+ and Node.js 20+.
 
 ```bash
 # Clone the repo
 git clone https://github.com/MsShawnP/gtin-validator.git
 cd gtin-validator
 
-# Install dependencies
+# Install Python dependencies
 pip install -r requirements.txt
 
-# Run the app
-streamlit run app.py
+# Start the API server
+uvicorn backend.main:app --reload
 
-# Run tests
-python -m pytest tests.py -v
+# In a second terminal — install and start the frontend
+cd frontend
+npm install
+npm run dev
 ```
 
-## Deploy to Streamlit Community Cloud
+The frontend runs on `http://localhost:5173` and proxies API requests to the backend on port 8000.
 
-1. Push this repo to GitHub
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect your GitHub repo
-4. Set the main file path to `app.py`
-5. Deploy
+### Run tests
+
+```bash
+pytest tests.py -v          # core validation engine
+pytest tests_api.py -v      # API endpoints
+cd frontend && npm run build  # frontend type-check + build
+```
+
+### Run with Docker
+
+```bash
+docker build -t gtin .
+docker run -p 8000:8000 gtin
+# App available at http://localhost:8000
+```
 
 ---
 
@@ -76,19 +88,38 @@ python -m pytest tests.py -v
 
 ```
 gtin-validator/
-├── app.py              # Streamlit UI
-├── gtin_core.py        # Validation engine, scoring, retailer rules
-├── csv_report.py       # CSV export
-├── pdf_report.py       # Branded PDF report (reportlab)
-├── sample_data.py      # Realistic sample data
-├── tests.py            # pytest test suite
+├── backend/
+│   ├── main.py             # FastAPI app, CORS, static mount
+│   ├── cache.py            # In-memory result cache
+│   ├── serializers.py      # Dataclass → Pydantic conversion
+│   ├── routes/
+│   │   ├── validate.py     # Validation endpoints
+│   │   ├── reports.py      # Report download endpoints
+│   │   ├── sample.py       # Sample data endpoint
+│   │   └── health.py       # Health check
+│   └── schemas/
+│       ├── requests.py     # Request models
+│       └── responses.py    # Response models
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx         # Main app component
+│   │   ├── api.ts          # API client
+│   │   ├── types.ts        # TypeScript interfaces
+│   │   ├── reducer.ts      # App state management
+│   │   ├── components/     # UI components
+│   │   └── styles/         # CSS tokens and globals
+│   ├── index.html
+│   └── vite.config.ts
+├── gtin_core.py            # Validation engine (core logic)
+├── csv_report.py           # CSV export
+├── pdf_report.py           # PDF report generation
+├── sample_data.py          # Demo dataset
+├── tests.py                # Core engine tests
+├── tests_api.py            # API endpoint tests
+├── Dockerfile              # Multi-stage build
+├── render.yaml             # Render deploy config
 ├── requirements.txt
-├── pyproject.toml      # Project metadata
-├── styles/
-│   └── app.css         # Custom component CSS
-├── .streamlit/
-│   └── config.toml     # Theme configuration
-└── README.md
+└── pyproject.toml
 ```
 
 ## Technical notes
@@ -97,7 +128,7 @@ gtin-validator/
 - **GTIN-14 hierarchy detection**: Matches indicator digits 1–8 with corresponding unit GTINs by comparing the inner 12-digit item reference
 - **Company prefix detection**: Approximate — uses first 7 digits as a grouping heuristic (actual GS1 prefix lengths vary 7–10 digits)
 - **Cost estimates**: Based on published industry averages for specialty food/CPG. Directional, not predictive.
-- **No data retention**: All validation happens in-session. No data is stored, logged, or transmitted beyond Streamlit's standard hosting.
+- **No data retention**: All validation happens in-session. The in-memory cache expires after 30 minutes and is not persisted.
 
 ## Standards referenced
 

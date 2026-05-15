@@ -1,0 +1,43 @@
+.row {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.card {
+  background: var(--color-card-bg);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  flex: 1;
+  min-width: 140px;
+  text-align: center;
+  border: 1px solid var(--color-card-border);
+}
+
+.number {
+  font-size: var(--font-size-stat);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-xs);
+}
+
+.critical .number { color: var(--color-error); }
+.warning .number { color: var(--color-warning); }
+.clean .number { color: var(--color-success); }
+
+@media (max-width: 768px) {
+  .card { padding: var(--space-md); }
+  .number { font-size: var(--font-size-2xl); }
+}
+
+@media (max-width: 480px) {
+  .row { gap: var(--space-sm); }
+  .card { min-width: 120px; padding: 0.75rem; }
+  .number { font-size: 1.25rem; }
+}
