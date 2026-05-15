@@ -186,10 +186,17 @@ if input_method == "upload":
                 "Validate GTINs", type="primary", use_container_width=True,
             )
         if paste_submitted and gtin_input.strip():
-            gtins_to_validate = [
+            raw_lines = [
                 line.strip() for line in gtin_input.strip().split("\n")
                 if line.strip()
             ]
+            if len(raw_lines) > 10_000:
+                st.warning(
+                    f"You pasted {len(raw_lines):,} GTINs — maximum is 10,000. "
+                    f"Only the first 10,000 will be validated."
+                )
+                raw_lines = raw_lines[:10_000]
+            gtins_to_validate = raw_lines
             uploaded_df = None
             st.session_state.pop("validation_data_cache", None)
             st.session_state.pop("uploaded_df", None)

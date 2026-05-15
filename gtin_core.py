@@ -348,7 +348,7 @@ def validate_single_gtin(raw: str, row_number: int) -> GTINResult:
     # --- UPC-A (GTIN-12) submitted where GTIN-13 may be expected ---
     if gtin_type == GTINType.GTIN_12:
         result.issues.append(Issue(
-            severity=Severity.WARNING,
+            severity=Severity.INFO,
             code="UPC_NOT_GTIN13",
             message=(
                 "This is a 12-digit UPC-A. Some systems require the 13-digit "
@@ -466,7 +466,7 @@ def validate_batch(gtins: list[str]) -> dict:
         if (result.gtin_type == GTINType.GTIN_12
                 and result.cleaned not in matched_unit_gtins):
             result.issues.append(Issue(
-                severity=Severity.WARNING,
+                severity=Severity.INFO,
                 code="NO_CASE_GTIN",
                 message=(
                     "This UPC-A has no corresponding case-level GTIN-14 in your file. "

@@ -79,8 +79,8 @@ class TestSingleValidation:
     def test_valid_gtin12(self):
         result = validate_single_gtin("614141000012", row_number=1)
         assert result.gtin_type == GTINType.GTIN_12
-        # Note: will have UPC_NOT_GTIN13 warning, but no critical issues
         assert not result.has_critical
+        assert not result.has_warning
 
     def test_empty_gtin(self):
         result = validate_single_gtin("", row_number=1)
@@ -124,9 +124,10 @@ class TestSingleValidation:
         assert result.cleaned == "614141000012"
         assert not result.has_critical
 
-    def test_upc_gtin13_warning(self):
+    def test_upc_gtin13_info(self):
         result = validate_single_gtin("614141000012", row_number=1)
-        assert any(i.code == "UPC_NOT_GTIN13" for i in result.issues)
+        upc_issue = next(i for i in result.issues if i.code == "UPC_NOT_GTIN13")
+        assert upc_issue.severity == Severity.INFO
 
     def test_company_prefix_extracted_gtin12(self):
         result = validate_single_gtin("614141000012", row_number=1)
@@ -185,6 +186,17 @@ class TestBatchValidation:
         data = validate_batch([])
         assert data["summary"]["total_gtins"] == 0
         assert data["score"]["score"] == 0
+
+    def test_valid_upc_batch_scores_high(self):
+        data = validate_batch([
+            "614141000012",
+            "614141000029",
+            "614141000036",
+            "614141000043",
+            "614141000050",
+        ])
+        assert data["score"]["score"] >= 70
+        assert data["summary"]["critical_issues"] == 0
 
 
 # =========================================================================

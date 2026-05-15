@@ -122,7 +122,6 @@ def generate_pdf_report(validation_data: dict, company_name: str = "") -> BytesI
     # --- Title page content ---
     report_title = "Product Data Validation Report"
     if company_name:
-        report_title = f"Product Data Validation Report"
         elements.append(Paragraph(company_name, ParagraphStyle(
             "CompanyName", parent=styles["Normal"],
             fontSize=12, textColor=ACCENT, spaceAfter=4,
