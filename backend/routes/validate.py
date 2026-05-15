@@ -35,9 +35,9 @@ def _detect_gtin_column(df: pd.DataFrame, override: str | None = None) -> str:
     if override and override in df.columns:
         return override
     for col in df.columns:
-        if any(term in col.lower() for term in GTIN_KEYWORDS):
-            return col
-    return df.columns[0]
+        if any(term in str(col).lower() for term in GTIN_KEYWORDS):
+            return str(col)
+    return str(df.columns[0])
 
 
 def _run_validation(gtins: list[str], df: pd.DataFrame | None = None) -> tuple[dict, str]:
