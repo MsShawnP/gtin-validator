@@ -3,20 +3,33 @@ PDF Report Generator for GTIN Validator.
 Produces a branded, professional PDF report using reportlab.
 """
 
+from __future__ import annotations
+
+from collections import defaultdict
+from datetime import datetime
+from io import BytesIO
+from typing import TYPE_CHECKING
+
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    PageBreak, HRFlowable, KeepTogether
+    HRFlowable,
+    KeepTogether,
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
 )
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from io import BytesIO
-from datetime import datetime
-from collections import defaultdict
+
 from gtin_core import Severity
 
+if TYPE_CHECKING:
+    from gtin_core import BatchResult
 
 # Colors
 DARK = colors.HexColor("#1a1a2e")
@@ -40,7 +53,7 @@ def severity_color(severity):
     return colors.HexColor("#17a2b8")
 
 
-def generate_pdf_report(validation_data: dict, company_name: str = "") -> BytesIO:
+def generate_pdf_report(validation_data: BatchResult, company_name: str = "") -> BytesIO:
     """Generate a branded PDF report and return as BytesIO."""
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -122,7 +135,6 @@ def generate_pdf_report(validation_data: dict, company_name: str = "") -> BytesI
     # --- Title page content ---
     report_title = "Product Data Validation Report"
     if company_name:
-        report_title = f"Product Data Validation Report"
         elements.append(Paragraph(company_name, ParagraphStyle(
             "CompanyName", parent=styles["Normal"],
             fontSize=12, textColor=ACCENT, spaceAfter=4,
@@ -454,118 +466,71 @@ def generate_pdf_report(validation_data: dict, company_name: str = "") -> BytesI
                 elements.append(render_item_block(r, label_color, body_style, small_style))
                 running_height += h
 
-    # --- Critical Issues — grouped by issue type ---
-    if critical_items:
+    # --- Render severity sections ---
+    CODE_LABELS = {
+        "EMPTY": "Empty or Blank GTINs",
+        "NON_NUMERIC": "Non-Numeric Characters in GTIN",
+        "INVALID_LENGTH": "Invalid GTIN Length",
+        "BAD_CHECK_DIGIT": "Incorrect Check Digit",
+        "ALL_ZEROS": "Placeholder GTINs (All Zeros)",
+        "DUPLICATE": "Duplicate GTINs",
+        "PREFIX_MISMATCH": "Company Prefix Mismatch",
+        "ORPHAN_CASE_GTIN": "Orphan Case GTINs (no matching unit)",
+        "INDICATOR_NINE": "Variable Measure Indicator Digit",
+        "UPC_NOT_GTIN13": "UPC-A Format (GTIN-13 may be required)",
+        "NO_CASE_GTIN": "Missing Case-Level GTIN-14",
+        "INDICATOR_ZERO": "GTIN-14 with Indicator 0 (base unit in 14-digit format)",
+        "CASE_LEVEL": "Case/Inner Pack Level GTIN-14",
+    }
+
+    severity_sections = [
+        (critical_items, Severity.CRITICAL, RED, "Critical Issues — These GTINs will be rejected", False),
+        (warning_items, Severity.WARNING, YELLOW, "Warnings — These GTINs may cause problems", True),
+        (info_items, Severity.INFO, colors.HexColor("#17a2b8"), "Info — Best practice notes", True),
+    ]
+
+    for section_items, severity, label_color, title, page_break in severity_sections:
+        if not section_items:
+            continue
+
+        if page_break:
+            elements.append(PageBreak())
+
         elements.append(Paragraph(
-            f'<font color="{RED.hexval()}">●</font> '
-            f'<b>Critical Issues — These GTINs will be rejected</b>',
+            f'<font color="{label_color.hexval()}">●</font> <b>{title}</b>',
             ParagraphStyle("SeverityHeader", parent=heading_style, fontSize=14),
         ))
         elements.append(Spacer(1, 8))
 
-        single_critical = [r for r in critical_items if len([i for i in r.issues if i.severity == Severity.CRITICAL]) == 1]
-        multi_critical = [r for r in critical_items if len([i for i in r.issues if i.severity == Severity.CRITICAL]) > 1]
+        def count_sev(r, sev=severity):
+            return len([i for i in r.issues if i.severity == sev])
 
-        if single_critical:
-            crit_groups = defaultdict(list)
-            for r in single_critical:
-                crit_issue = next(i for i in r.issues if i.severity == Severity.CRITICAL)
-                crit_groups[crit_issue.code].append(r)
+        single = [r for r in section_items if count_sev(r) == 1]
+        multi = [r for r in section_items if count_sev(r) > 1]
 
-            crit_code_labels = {
-                "EMPTY": "Empty or Blank GTINs",
-                "NON_NUMERIC": "Non-Numeric Characters in GTIN",
-                "INVALID_LENGTH": "Invalid GTIN Length",
-                "BAD_CHECK_DIGIT": "Incorrect Check Digit",
-                "ALL_ZEROS": "Placeholder GTINs (All Zeros)",
-            }
+        if single:
+            groups = defaultdict(list)
+            for r in single:
+                issue = next((i for i in r.issues if i.severity == severity), r.issues[0])
+                groups[issue.code].append(r)
 
-            for code, items in crit_groups.items():
-                group_label = crit_code_labels.get(code, code)
-                sample_issue = next(i for i in items[0].issues if i.code == code)
+            for code, items in groups.items():
+                group_label = CODE_LABELS.get(code, code)
+                sample_issue = next((i for i in items[0].issues if i.code == code), items[0].issues[0])
                 render_group_with_continuation(
                     group_label, sample_issue.recommendation, items,
-                    RED, body_style, small_style, elements,
+                    label_color, body_style, small_style, elements,
                 )
 
-        if multi_critical:
-            multi_critical.sort(key=lambda r: len([i for i in r.issues if i.severity == Severity.CRITICAL]), reverse=True)
-            render_multi_issue_group(
-                "Items with Multiple Critical Issues", multi_critical,
-                RED, body_style, small_style, elements,
+        if multi:
+            multi.sort(key=count_sev, reverse=True)
+            multi_label = (
+                "Items with Multiple Notes" if severity == Severity.INFO
+                else f"Items with Multiple {severity.value}s"
             )
-
-    # --- Warnings — grouped by issue type ---
-    if warning_items:
-        elements.append(PageBreak())
-        elements.append(Paragraph(
-            f'<font color="{YELLOW.hexval()}">●</font> '
-            f'<b>Warnings — These GTINs may cause problems</b>',
-            ParagraphStyle("SeverityHeader", parent=heading_style, fontSize=14),
-        ))
-        elements.append(Spacer(1, 8))
-
-        single_issue = [r for r in warning_items if len([i for i in r.issues if i.severity == Severity.WARNING]) == 1]
-        multi_issue = [r for r in warning_items if len([i for i in r.issues if i.severity == Severity.WARNING]) > 1]
-
-        if single_issue:
-            issue_groups = defaultdict(list)
-            for r in single_issue:
-                warning_issue = next(i for i in r.issues if i.severity == Severity.WARNING)
-                issue_groups[warning_issue.code].append(r)
-
-            code_labels = {
-                "DUPLICATE": "Duplicate GTINs",
-                "PREFIX_MISMATCH": "Company Prefix Mismatch",
-                "ORPHAN_CASE_GTIN": "Orphan Case GTINs (no matching unit)",
-                "INDICATOR_NINE": "Variable Measure Indicator Digit",
-                "UPC_NOT_GTIN13": "UPC-A Format (GTIN-13 may be required)",
-                "NO_CASE_GTIN": "Missing Case-Level GTIN-14",
-            }
-
-            for code, items in issue_groups.items():
-                group_label = code_labels.get(code, code)
-                sample_issue = next(i for i in items[0].issues if i.code == code)
-                render_group_with_continuation(
-                    group_label, sample_issue.recommendation, items,
-                    YELLOW, body_style, small_style, elements,
-                )
-
-        if multi_issue:
-            multi_issue.sort(key=lambda r: len([i for i in r.issues if i.severity == Severity.WARNING]), reverse=True)
             render_multi_issue_group(
-                "Items with Multiple Warnings", multi_issue,
-                YELLOW, body_style, small_style, elements,
-            )
-
-    # --- Info ---
-    if info_items:
-        elements.append(PageBreak())
-        elements.append(Paragraph(
-            f'<font color="{colors.HexColor("#17a2b8").hexval()}">●</font> '
-            f'<b>Info — Best practice notes</b>',
-            ParagraphStyle("SeverityHeader", parent=heading_style, fontSize=14),
-        ))
-        elements.append(Spacer(1, 8))
-
-        # Group info items by code too
-        info_groups = defaultdict(list)
-        for r in info_items:
-            # Use first info issue code for grouping
-            info_issue = next((i for i in r.issues if i.severity == Severity.INFO), r.issues[0])
-            info_groups[info_issue.code].append(r)
-
-        info_code_labels = {
-            "INDICATOR_ZERO": "GTIN-14 with Indicator 0 (base unit in 14-digit format)",
-            "CASE_LEVEL": "Case/Inner Pack Level GTIN-14",
-        }
-
-        for code, items in info_groups.items():
-            group_label = info_code_labels.get(code, code)
-            sample_issue = next((i for i in items[0].issues if i.code == code), items[0].issues[0])
-            render_group_with_continuation(
-                group_label, sample_issue.recommendation, items,
-                colors.HexColor("#17a2b8"), body_style, small_style, elements,
+                multi_label, multi,
+                label_color, body_style, small_style, elements,
             )
 
     # --- Clean items summary ---

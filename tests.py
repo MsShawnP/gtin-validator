@@ -4,23 +4,21 @@ Tests for the GTIN Validator core engine.
 Run with: python -m pytest tests.py -v
 """
 
-import pytest
 import pandas as pd
+
 from gtin_core import (
+    GTINType,
+    Severity,
     calculate_check_digit,
-    identify_gtin_type,
-    validate_single_gtin,
-    validate_batch,
-    analyze_hierarchy,
+    check_data_completeness,
     generate_before_after,
     generate_executive_summary,
     generate_fix_roadmap,
     generate_gtin14_suggestions,
-    check_data_completeness,
-    GTINType,
-    Severity,
+    identify_gtin_type,
+    validate_batch,
+    validate_single_gtin,
 )
-
 
 # =========================================================================
 # Check digit calculation
@@ -79,8 +77,8 @@ class TestSingleValidation:
     def test_valid_gtin12(self):
         result = validate_single_gtin("614141000012", row_number=1)
         assert result.gtin_type == GTINType.GTIN_12
-        # Note: will have UPC_NOT_GTIN13 warning, but no critical issues
         assert not result.has_critical
+        assert not result.has_warning
 
     def test_empty_gtin(self):
         result = validate_single_gtin("", row_number=1)
@@ -124,9 +122,10 @@ class TestSingleValidation:
         assert result.cleaned == "614141000012"
         assert not result.has_critical
 
-    def test_upc_gtin13_warning(self):
+    def test_upc_gtin13_info(self):
         result = validate_single_gtin("614141000012", row_number=1)
-        assert any(i.code == "UPC_NOT_GTIN13" for i in result.issues)
+        upc_issue = next(i for i in result.issues if i.code == "UPC_NOT_GTIN13")
+        assert upc_issue.severity == Severity.INFO
 
     def test_company_prefix_extracted_gtin12(self):
         result = validate_single_gtin("614141000012", row_number=1)
@@ -185,6 +184,17 @@ class TestBatchValidation:
         data = validate_batch([])
         assert data["summary"]["total_gtins"] == 0
         assert data["score"]["score"] == 0
+
+    def test_valid_upc_batch_scores_high(self):
+        data = validate_batch([
+            "614141000012",
+            "614141000029",
+            "614141000036",
+            "614141000043",
+            "614141000050",
+        ])
+        assert data["score"]["score"] >= 70
+        assert data["summary"]["critical_issues"] == 0
 
 
 # =========================================================================
@@ -386,3 +396,68 @@ class TestDataCompleteness:
         df = pd.DataFrame({"GTIN": pd.Series(dtype=str)})
         result = check_data_completeness(df)
         assert result["overall_completeness"] == 0
+
+
+# =========================================================================
+# CSV report
+# =========================================================================
+
+class TestCSVReport:
+    def _sample_data(self):
+        return validate_batch(["614141000012", "invalid", "614141000029"])
+
+    def test_csv_returns_string(self):
+        from csv_report import generate_csv_report
+        csv_out = generate_csv_report(self._sample_data())
+        assert isinstance(csv_out, str)
+        assert len(csv_out) > 0
+
+    def test_csv_header_row(self):
+        from csv_report import generate_csv_report
+        csv_out = generate_csv_report(self._sample_data())
+        header = csv_out.splitlines()[0]
+        assert "GTIN (Original)" in header
+        assert "Valid" in header
+        assert "Issues" in header
+
+    def test_csv_row_count(self):
+        from csv_report import generate_csv_report
+        csv_out = generate_csv_report(self._sample_data())
+        lines = [line for line in csv_out.splitlines() if line.strip()]
+        assert len(lines) == 4  # header + 3 GTINs
+
+    def test_csv_sanitizes_formulas(self):
+        from csv_report import _sanitize_cell
+        assert _sanitize_cell("=SUM(A1)") == "'=SUM(A1)"
+        assert _sanitize_cell("+cmd") == "'+cmd"
+        assert _sanitize_cell("normal") == "normal"
+        assert _sanitize_cell("") == ""
+
+
+# =========================================================================
+# PDF report
+# =========================================================================
+
+class TestPDFReport:
+    def _sample_data(self):
+        return validate_batch(["614141000012", "invalid", "614141000029"])
+
+    def test_pdf_returns_bytes(self):
+        from pdf_report import generate_pdf_report
+        buf = generate_pdf_report(self._sample_data())
+        data = buf.getvalue()
+        assert isinstance(data, bytes)
+        assert data[:5] == b"%PDF-"
+
+    def test_pdf_with_company_name(self):
+        from pdf_report import generate_pdf_report
+        buf = generate_pdf_report(self._sample_data(), company_name="Cedar Hollow Provisions")
+        data = buf.getvalue()
+        assert len(data) > 0
+        assert data[:5] == b"%PDF-"
+
+    def test_pdf_empty_batch(self):
+        from pdf_report import generate_pdf_report
+        data = validate_batch([])
+        buf = generate_pdf_report(data)
+        assert buf.getvalue()[:5] == b"%PDF-"
