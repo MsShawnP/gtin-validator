@@ -435,6 +435,49 @@ class TestCSVReport:
 
 
 # =========================================================================
+# Corrected CSV
+# =========================================================================
+
+class TestCorrectedCSV:
+    def test_corrected_csv_fixes_check_digit(self):
+        from csv_report import generate_corrected_csv
+        data = validate_batch(["614141000011"])  # bad check digit (should be 2)
+        csv_out = generate_corrected_csv(data)
+        lines = csv_out.splitlines()
+        assert "614141000012" in lines[1]
+        assert "Fixed" in lines[1]
+
+    def test_corrected_csv_valid_gtin_unchanged(self):
+        from csv_report import generate_corrected_csv
+        data = validate_batch(["614141000012"])
+        csv_out = generate_corrected_csv(data)
+        lines = csv_out.splitlines()
+        assert "OK" in lines[1]
+        assert "614141000012" in lines[1]
+
+    def test_corrected_csv_unfixable_flagged(self):
+        from csv_report import generate_corrected_csv
+        data = validate_batch(["abc123"])
+        csv_out = generate_corrected_csv(data)
+        lines = csv_out.splitlines()
+        assert "Needs manual fix" in lines[1]
+
+    def test_corrected_csv_cleaned_whitespace(self):
+        from csv_report import generate_corrected_csv
+        data = validate_batch(["614141 000012"])
+        csv_out = generate_corrected_csv(data)
+        lines = csv_out.splitlines()
+        assert "Cleaned" in lines[1]
+
+    def test_corrected_csv_row_count(self):
+        from csv_report import generate_corrected_csv
+        data = validate_batch(["614141000012", "invalid", "614141000029"])
+        csv_out = generate_corrected_csv(data)
+        lines = [line for line in csv_out.splitlines() if line.strip()]
+        assert len(lines) == 4  # header + 3
+
+
+# =========================================================================
 # PDF report
 # =========================================================================
 

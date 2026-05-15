@@ -86,3 +86,47 @@ def generate_csv_report(validation_data: BatchResult) -> str:
         ])
 
     return output.getvalue()
+
+
+def generate_corrected_csv(validation_data: BatchResult) -> str:
+    """Generate a CSV with corrected GTINs ready for re-import.
+
+    Each row gets the best available GTIN: corrected check digit if fixable,
+    cleaned value if already valid, or the original with a status flag if
+    unfixable. Designed for users to paste directly into their product master.
+    """
+    output = StringIO()
+    writer = csv.writer(output)
+
+    results = validation_data["results"]
+
+    writer.writerow(["Row", "Original GTIN", "Corrected GTIN", "Status", "Action Taken"])
+
+    for r in results:
+        if r.corrected_value:
+            corrected = r.corrected_value
+            status = "Fixed"
+            action = "Check digit corrected"
+        elif r.is_valid and not r.has_critical:
+            corrected = r.cleaned
+            if r.cleaned != r.raw_input.strip():
+                status = "Cleaned"
+                action = "Whitespace/formatting removed"
+            else:
+                status = "OK"
+                action = "No changes needed"
+        else:
+            corrected = ""
+            unfixable_codes = [i.code for i in r.issues if i.severity.value == "Critical"]
+            status = "Needs manual fix"
+            action = ", ".join(unfixable_codes) if unfixable_codes else "Review required"
+
+        writer.writerow([
+            r.row_number,
+            _sanitize_cell(r.raw_input),
+            _sanitize_cell(corrected),
+            status,
+            action,
+        ])
+
+    return output.getvalue()

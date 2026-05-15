@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from csv_report import generate_csv_report
+from csv_report import generate_corrected_csv, generate_csv_report
 from gtin_core import (
     RETAILER_PROFILES,
     Severity,
@@ -301,20 +301,38 @@ if gtins_to_validate:
     )
     st.session_state["company_name"] = company_name
 
-    dl_col1, dl_col2 = st.columns(2)
+    filename_base = company_name.replace(" ", "_") if company_name else "gtin_validation"
+
+    dl_col1, dl_col2, dl_col3 = st.columns(3)
 
     with dl_col1:
+        st.markdown("**✅ Corrected GTINs**")
+        st.markdown(
+            '<p class="text-sm-muted">'
+            'Clean CSV with corrected check digits and formatting fixes applied. '
+            'Paste directly into your product master or retailer portal.'
+            '</p>',
+            unsafe_allow_html=True,
+        )
+        corrected_data = generate_corrected_csv(validation_data)
+        st.download_button(
+            label="✅ Download Corrected GTINs",
+            data=corrected_data,
+            file_name=f"{filename_base}_corrected.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+    with dl_col2:
         st.markdown("**📄 CSV Report — Raw Data**")
         st.markdown(
             '<p class="text-sm-muted">'
-            'Row-by-row validation results in spreadsheet format. '
-            'Includes each GTIN, its status, issue codes, and corrected values. '
-            'Best for importing into Excel or your own systems for further analysis.'
+            'Row-by-row validation results with issue codes, recommendations, '
+            'and retailer impact. Best for Excel analysis.'
             '</p>',
             unsafe_allow_html=True,
         )
         csv_data = generate_csv_report(validation_data)
-        filename_base = company_name.replace(" ", "_") if company_name else "gtin_validation"
         st.download_button(
             label="📄 Download CSV Report",
             data=csv_data,
@@ -323,13 +341,12 @@ if gtins_to_validate:
             use_container_width=True,
         )
 
-    with dl_col2:
+    with dl_col3:
         st.markdown("**📑 PDF Report — Full Diagnostic**")
         st.markdown(
             '<p class="text-sm-muted">'
-            'Branded, professional report with readiness score, retailer-specific '
-            'checklists, cost-of-inaction estimates, and prioritized issue detail. '
-            'Designed to hand directly to your operations team, broker, or trading partner coordinator.'
+            'Branded report with readiness score, retailer checklists, '
+            'and cost-of-inaction estimates. Hand to your COO or broker.'
             '</p>',
             unsafe_allow_html=True,
         )
