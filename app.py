@@ -148,31 +148,47 @@ input_method = st.session_state.get("input_method")
 
 if input_method == "upload":
     uploaded_file = st.file_uploader(
-        "Upload a CSV file with a GTIN column:",
-        type=["csv"],
-        help="Your CSV should have a column containing GTINs. We'll auto-detect it.",
+        "Upload a CSV or Excel file with a GTIN column:",
+        type=["csv", "xlsx", "xls"],
+        help="We'll auto-detect the GTIN column. You can change the selection if needed.",
     )
     if uploaded_file:
         try:
-            df = pd.read_csv(uploaded_file, dtype=str)
-            uploaded_df = df
-            gtin_col = None
-            for col in df.columns:
-                if any(term in col.lower() for term in ["gtin", "upc", "ean", "barcode", "code"]):
-                    gtin_col = col
-                    break
-            if gtin_col is None:
-                gtin_col = st.selectbox(
-                    "Which column contains GTINs?",
-                    df.columns.tolist(),
-                )
+            if uploaded_file.name.endswith((".xlsx", ".xls")):
+                df = pd.read_excel(uploaded_file, dtype=str)
             else:
-                st.info(f"Auto-detected GTIN column: **{gtin_col}**")
+                df = pd.read_csv(uploaded_file, dtype=str)
+            uploaded_df = df
+
+            gtin_keywords = ["gtin", "upc", "ean", "barcode", "code", "item number", "sku"]
+            auto_col = None
+            for col in df.columns:
+                if any(term in col.lower() for term in gtin_keywords):
+                    auto_col = col
+                    break
+
+            default_idx = df.columns.tolist().index(auto_col) if auto_col else 0
+            gtin_col = st.selectbox(
+                "GTIN column" + (f" (auto-detected: **{auto_col}**)" if auto_col else ""),
+                df.columns.tolist(),
+                index=default_idx,
+                help="Select the column containing your GTINs. We auto-detect common names.",
+            )
 
             gtins_to_validate = df[gtin_col].dropna().tolist()
-            st.success(f"Loaded {len(gtins_to_validate)} GTINs from '{gtin_col}'")
+
+            col_info, col_preview = st.columns([1, 2])
+            with col_info:
+                st.markdown(
+                    f"**{len(gtins_to_validate)}** GTINs from **{len(df.columns)}** columns "
+                    f"· {uploaded_file.name}"
+                )
+            with col_preview:
+                with st.expander("Preview uploaded data"):
+                    st.dataframe(df.head(10), use_container_width=True, hide_index=True)
+
         except Exception as e:
-            st.error(f"Error reading CSV: {e}")
+            st.error(f"Error reading file: {e}")
 
     with st.expander("Or paste GTINs manually"):
         with st.form("gtin_paste_form"):
