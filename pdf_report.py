@@ -384,70 +384,32 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
         # Header line ~18pt + each issue ~30pt (message + fix)
         return 18 + len(r.issues) * 30
 
-    def render_group_with_continuation(group_label, recommendation_text, items,
-                                       label_color, body_style, small_style, elements):
+    def render_item_group(group_label, items, label_color, body_style,
+                          small_style, elements, recommendation_text=None):
         """
-        Render a group of items. Try to keep header + all items together.
-        If too tall, chunk into pages with 'continued' headers.
+        Render a group of items with continuation support.
+        Keeps header + all items together when they fit on one page;
+        otherwise chunks into pages with 'continued' headers.
         """
-        # Build the header flowables
+        header_height = 40 if recommendation_text else 30
+
         def make_header(continued=False):
             suffix = " — continued" if continued else ""
-            header_parts = []
-            header_parts.append(Paragraph(
+            after = 4 if recommendation_text else 8
+            parts = [Paragraph(
                 f'<b>{group_label}{suffix}</b> — {len(items)} item(s)',
                 ParagraphStyle("GroupHeader", parent=body_style, fontSize=11,
-                               spaceBefore=16, spaceAfter=4, textColor=DARK),
-            ))
+                               spaceBefore=16, spaceAfter=after, textColor=DARK),
+            )]
             if recommendation_text and not continued:
-                header_parts.append(Paragraph(
+                parts.append(Paragraph(
                     f'<i>{recommendation_text}</i>',
                     ParagraphStyle("GroupRec", parent=small_style, leftIndent=20, spaceAfter=8),
                 ))
-            return header_parts
+            return parts
 
-        # Calculate total height
-        total_height = 40  # header + recommendation
-        item_heights = []
-        for r in items:
-            h = estimate_item_height(r)
-            item_heights.append(h)
-            total_height += h
-
-        # If everything fits on one page, wrap it all in KeepTogether
-        if total_height <= PAGE_CONTENT_HEIGHT:
-            group_block = make_header(continued=False)
-            for r in items:
-                group_block.extend(render_item_flowables(r, label_color, body_style, small_style))
-            elements.append(KeepTogether(group_block))
-        else:
-            # Too tall for one page — chunk with continued headers
-            elements.extend(make_header(continued=False))
-
-            running_height = 40  # header already placed
-            for i, r in enumerate(items):
-                h = item_heights[i]
-                if running_height + h > PAGE_CONTENT_HEIGHT and i > 0:
-                    # Start new page with continued header
-                    elements.append(PageBreak())
-                    elements.extend(make_header(continued=True))
-                    running_height = 40
-                elements.append(render_item_block(r, label_color, body_style, small_style))
-                running_height += h
-
-    def render_multi_issue_group(group_label, items, label_color, body_style, small_style, elements):
-        """Render a multi-issue group with continuation support."""
-        def make_header(continued=False):
-            suffix = " — continued" if continued else ""
-            return [Paragraph(
-                f'<b>{group_label}{suffix}</b> — {len(items)} item(s)',
-                ParagraphStyle("MultiGroupHeader", parent=body_style, fontSize=11,
-                               spaceBefore=16, spaceAfter=8, textColor=DARK),
-            )]
-
-        total_height = 30
         item_heights = [estimate_item_height(r) for r in items]
-        total_height += sum(item_heights)
+        total_height = header_height + sum(item_heights)
 
         if total_height <= PAGE_CONTENT_HEIGHT:
             group_block = make_header(continued=False)
@@ -456,13 +418,13 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
             elements.append(KeepTogether(group_block))
         else:
             elements.extend(make_header(continued=False))
-            running_height = 30
+            running_height = header_height
             for i, r in enumerate(items):
                 h = item_heights[i]
                 if running_height + h > PAGE_CONTENT_HEIGHT and i > 0:
                     elements.append(PageBreak())
                     elements.extend(make_header(continued=True))
-                    running_height = 30
+                    running_height = header_height
                 elements.append(render_item_block(r, label_color, body_style, small_style))
                 running_height += h
 
@@ -517,9 +479,9 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
             for code, items in groups.items():
                 group_label = CODE_LABELS.get(code, code)
                 sample_issue = next((i for i in items[0].issues if i.code == code), items[0].issues[0])
-                render_group_with_continuation(
-                    group_label, sample_issue.recommendation, items,
-                    label_color, body_style, small_style, elements,
+                render_item_group(
+                    group_label, items, label_color, body_style,
+                    small_style, elements, sample_issue.recommendation,
                 )
 
         if multi:
@@ -528,9 +490,9 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
                 "Items with Multiple Notes" if severity == Severity.INFO
                 else f"Items with Multiple {severity.value}s"
             )
-            render_multi_issue_group(
-                multi_label, multi,
-                label_color, body_style, small_style, elements,
+            render_item_group(
+                multi_label, multi, label_color, body_style,
+                small_style, elements,
             )
 
     # --- Clean items summary ---
