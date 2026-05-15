@@ -63,7 +63,7 @@ export default function DownloadReports({
             Paste directly into your product master or retailer portal.
           </p>
           <DownloadButton
-            label="Download Corrected GTINs"
+            label="Download Corrected CSV"
             onClick={() => api.downloadCorrectedCsv(token, companyName)}
           />
         </div>
