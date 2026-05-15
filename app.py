@@ -52,12 +52,6 @@ st.html(f"<style>{_css}</style>")
 with st.sidebar:
     st.markdown("### Settings")
 
-    company_name = st.text_input(
-        "Your company name (optional)",
-        placeholder="e.g., Cedar Hollow Provisions",
-        help="Used to brand your PDF report.",
-    )
-
     st.markdown("### Filter by retailer")
     selected_retailer = st.selectbox(
         "Show requirements for:",
@@ -297,6 +291,15 @@ if gtins_to_validate:
 
     # === DOWNLOAD VALIDATION REPORTS (above results) ===
     st.markdown("### 📥 Download Validation Reports")
+
+    company_name = st.text_input(
+        "Company name (optional)",
+        value=st.session_state.get("company_name", ""),
+        placeholder="e.g., Cedar Hollow Provisions",
+        help="Brands your PDF report and file names.",
+        key="company_name_input",
+    )
+    st.session_state["company_name"] = company_name
 
     dl_col1, dl_col2 = st.columns(2)
 

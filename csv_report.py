@@ -3,8 +3,14 @@ CSV Report Generator for GTIN Validator.
 Exports validation results as a flat CSV file.
 """
 
+from __future__ import annotations
+
 import csv
 from io import StringIO
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from gtin_core import BatchResult
 
 _FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
 
@@ -16,7 +22,7 @@ def _sanitize_cell(value: str) -> str:
     return value
 
 
-def generate_csv_report(validation_data: dict) -> str:
+def generate_csv_report(validation_data: BatchResult) -> str:
     """Generate a CSV report string from validation results."""
     output = StringIO()
     writer = csv.writer(output)

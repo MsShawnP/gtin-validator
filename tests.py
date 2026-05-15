@@ -396,3 +396,68 @@ class TestDataCompleteness:
         df = pd.DataFrame({"GTIN": pd.Series(dtype=str)})
         result = check_data_completeness(df)
         assert result["overall_completeness"] == 0
+
+
+# =========================================================================
+# CSV report
+# =========================================================================
+
+class TestCSVReport:
+    def _sample_data(self):
+        return validate_batch(["614141000012", "invalid", "614141000029"])
+
+    def test_csv_returns_string(self):
+        from csv_report import generate_csv_report
+        csv_out = generate_csv_report(self._sample_data())
+        assert isinstance(csv_out, str)
+        assert len(csv_out) > 0
+
+    def test_csv_header_row(self):
+        from csv_report import generate_csv_report
+        csv_out = generate_csv_report(self._sample_data())
+        header = csv_out.splitlines()[0]
+        assert "GTIN (Original)" in header
+        assert "Valid" in header
+        assert "Issues" in header
+
+    def test_csv_row_count(self):
+        from csv_report import generate_csv_report
+        csv_out = generate_csv_report(self._sample_data())
+        lines = [line for line in csv_out.splitlines() if line.strip()]
+        assert len(lines) == 4  # header + 3 GTINs
+
+    def test_csv_sanitizes_formulas(self):
+        from csv_report import _sanitize_cell
+        assert _sanitize_cell("=SUM(A1)") == "'=SUM(A1)"
+        assert _sanitize_cell("+cmd") == "'+cmd"
+        assert _sanitize_cell("normal") == "normal"
+        assert _sanitize_cell("") == ""
+
+
+# =========================================================================
+# PDF report
+# =========================================================================
+
+class TestPDFReport:
+    def _sample_data(self):
+        return validate_batch(["614141000012", "invalid", "614141000029"])
+
+    def test_pdf_returns_bytes(self):
+        from pdf_report import generate_pdf_report
+        buf = generate_pdf_report(self._sample_data())
+        data = buf.getvalue()
+        assert isinstance(data, bytes)
+        assert data[:5] == b"%PDF-"
+
+    def test_pdf_with_company_name(self):
+        from pdf_report import generate_pdf_report
+        buf = generate_pdf_report(self._sample_data(), company_name="Cedar Hollow Provisions")
+        data = buf.getvalue()
+        assert len(data) > 0
+        assert data[:5] == b"%PDF-"
+
+    def test_pdf_empty_batch(self):
+        from pdf_report import generate_pdf_report
+        data = validate_batch([])
+        buf = generate_pdf_report(data)
+        assert buf.getvalue()[:5] == b"%PDF-"

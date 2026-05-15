@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import Optional, TypedDict
 
 import pandas as pd
 
@@ -110,6 +110,32 @@ def identify_gtin_type(length: int) -> GTINType:
         13: GTINType.GTIN_13,
         14: GTINType.GTIN_14,
     }.get(length, GTINType.UNKNOWN)
+
+
+class BatchSummary(TypedDict):
+    total_gtins: int
+    valid: int
+    critical_issues: int
+    warnings: int
+    clean: int
+    duplicate_groups: int
+    unique_prefixes: int
+
+
+class ScoreResult(TypedDict):
+    score: int
+    grade: str
+    interpretation: str
+
+
+class BatchResult(TypedDict):
+    results: list[GTINResult]
+    summary: BatchSummary
+    duplicates: dict[str, int]
+    hierarchy: dict
+    retailer_checklists: dict
+    score: ScoreResult
+    cost_estimate: dict
 
 
 # =============================================================================
@@ -377,7 +403,7 @@ def validate_single_gtin(raw: str, row_number: int) -> GTINResult:
 # Batch validation
 # =============================================================================
 
-def validate_batch(gtins: list[str]) -> dict:
+def validate_batch(gtins: list[str]) -> BatchResult:
     """
     Validate a batch of GTINs and return comprehensive results.
 
@@ -490,7 +516,7 @@ def validate_batch(gtins: list[str]) -> dict:
 
     # --- Summary stats ---
     total = len(results)
-    summary = {
+    summary: BatchSummary = {
         "total_gtins": total,
         "valid": sum(1 for r in results if r.is_valid and not r.has_critical),
         "critical_issues": sum(1 for r in results if r.has_critical),
@@ -710,7 +736,7 @@ def generate_retailer_checklists(
 def calculate_readiness_score(
     results: list[GTINResult],
     hierarchy: dict,
-) -> dict:
+) -> ScoreResult:
     """
     Calculate an overall submission readiness score (0–100).
 
@@ -835,7 +861,7 @@ def generate_before_after(results: list[GTINResult]) -> list[dict]:
 # Executive summary generator
 # =============================================================================
 
-def generate_executive_summary(validation_data: dict) -> str:
+def generate_executive_summary(validation_data: BatchResult) -> str:
     """
     Generate a plain-English executive summary suitable for copy/paste
     into an email or Slack message.
