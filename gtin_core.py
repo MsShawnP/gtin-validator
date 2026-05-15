@@ -14,13 +14,12 @@ References:
 
 from __future__ import annotations
 
-from collections import Counter, defaultdict
+from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
 
 import pandas as pd
-
 
 # =============================================================================
 # Data models
@@ -128,7 +127,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "case, pallet). All GTINs are validated against the GS1 database. "
             "Items with invalid GTINs will not go live in Item 360."
         ),
-        "gtin14_format": "GTIN-14 preferred for case-level identification",
     },
     "Costco": {
         "description": "Costco Item Setup Workbook",
@@ -139,7 +137,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "Costco requires valid GTINs for all items. Dimension and weight "
             "discrepancies tied to wrong GTINs result in logistics chargebacks."
         ),
-        "gtin14_format": "GTIN-14 required for case/pallet levels",
     },
     "UNFI": {
         "description": "UNFI New Item Form",
@@ -150,7 +147,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "UNFI requires UPC for each sellable unit. Case GTIN needed for "
             "warehouse receiving. Incorrect GTINs delay item activation."
         ),
-        "gtin14_format": "Case GTIN required for distribution",
     },
     "Whole Foods": {
         "description": "Whole Foods Market Item Setup",
@@ -161,7 +157,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "Whole Foods requires valid UPC/EAN for each sellable unit. Items "
             "synced via 1WorldSync must have complete, accurate data."
         ),
-        "gtin14_format": "Not typically required at store level",
     },
     "KeHE": {
         "description": "KeHE Distributors Item Setup",
@@ -172,7 +167,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "KeHE requires UPC for each sellable unit and case GTIN for "
             "warehouse operations. Data synced via 1WorldSync."
         ),
-        "gtin14_format": "Case GTIN required for distribution",
     },
     "1WorldSync (GDSN)": {
         "description": "1WorldSync Global Data Synchronisation Network",
@@ -185,7 +179,6 @@ RETAILER_PROFILES: dict[str, dict] = {
             "configuration errors and logistics chargebacks. Wrong nutritional "
             "data creates legal exposure."
         ),
-        "gtin14_format": "Full hierarchy with indicator digits required",
     },
 }
 
@@ -214,6 +207,8 @@ def validate_single_gtin(raw: str, row_number: int) -> GTINResult:
     Returns:
         A GTINResult with all issues found.
     """
+    if not isinstance(raw, str):
+        raw = "" if raw is None or (isinstance(raw, float) and raw != raw) else str(raw)
     cleaned = raw.strip().replace("-", "").replace(" ", "")
     result = GTINResult(
         raw_input=raw.strip(),
@@ -538,7 +533,7 @@ def analyze_hierarchy(results: list[GTINResult]) -> dict:
         if r.gtin_type in (GTINType.GTIN_12, GTINType.GTIN_13):
             normalized = r.cleaned.zfill(13)
             unit_gtins[normalized[:-1]] = r  # store without check digit
-        elif r.gtin_type == GTINType.GTIN_14 and r.indicator_digit in "12345678":
+        elif r.gtin_type == GTINType.GTIN_14 and r.indicator_digit and r.indicator_digit in "12345678":
             case_gtins.append(r)
 
     matched_pairs = []
@@ -666,7 +661,7 @@ def generate_retailer_checklists(
         # Check 5: Case GTIN present (if required)
         if profile["requires_case_gtin"]:
             has_case = any(
-                r.gtin_type == GTINType.GTIN_14 and r.indicator_digit in "12345678"
+                r.gtin_type == GTINType.GTIN_14 and r.indicator_digit and r.indicator_digit in "12345678"
                 for r in results
             )
             checks.append({
@@ -793,8 +788,8 @@ def estimate_cost_of_inaction(results: list[GTINResult]) -> dict:
         f"retailers, these costs typically increase 3-4x."
         if total >= 20
         else (
-            f"As you add SKUs and retailers, these problems compound. "
-            f"Companies at 2x your SKU count typically see 3-4x these costs."
+            "As you add SKUs and retailers, these problems compound. "
+            "Companies at 2x your SKU count typically see 3-4x these costs."
         )
     )
 

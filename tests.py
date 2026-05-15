@@ -4,23 +4,21 @@ Tests for the GTIN Validator core engine.
 Run with: python -m pytest tests.py -v
 """
 
-import pytest
 import pandas as pd
+
 from gtin_core import (
+    GTINType,
+    Severity,
     calculate_check_digit,
-    identify_gtin_type,
-    validate_single_gtin,
-    validate_batch,
-    analyze_hierarchy,
+    check_data_completeness,
     generate_before_after,
     generate_executive_summary,
     generate_fix_roadmap,
     generate_gtin14_suggestions,
-    check_data_completeness,
-    GTINType,
-    Severity,
+    identify_gtin_type,
+    validate_batch,
+    validate_single_gtin,
 )
-
 
 # =========================================================================
 # Check digit calculation

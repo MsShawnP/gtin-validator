@@ -6,20 +6,25 @@ for retailer submission (Walmart, Costco, UNFI, 1WorldSync, and more).
 Built for operations people, not developers.
 """
 
-import streamlit as st
-import pandas as pd
 from io import StringIO
-from gtin_core import (
-    validate_batch, Severity, generate_before_after,
-    RETAILER_PROFILES, GTINType,
-    generate_executive_summary, generate_fix_roadmap,
-    generate_gtin14_suggestions, check_data_completeness,
-)
-from csv_report import generate_csv_report
-from pdf_report import generate_pdf_report
-from sample_data import SAMPLE_DATA, SAMPLE_DESCRIPTION
 from pathlib import Path
 
+import pandas as pd
+import streamlit as st
+
+from csv_report import generate_csv_report
+from gtin_core import (
+    RETAILER_PROFILES,
+    Severity,
+    check_data_completeness,
+    generate_before_after,
+    generate_executive_summary,
+    generate_fix_roadmap,
+    generate_gtin14_suggestions,
+    validate_batch,
+)
+from pdf_report import generate_pdf_report
+from sample_data import SAMPLE_DATA, SAMPLE_DESCRIPTION
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -357,8 +362,8 @@ if gtins_to_validate:
         info_items = [r for r in results if r.issues and not r.has_critical and not r.has_warning]
 
         if critical_items:
-            st.markdown(f'<span class="badge-critical">CRITICAL</span> — '
-                       f'These GTINs will be **rejected** by retailers.',
+            st.markdown('<span class="badge-critical">CRITICAL</span> — '
+                       'These GTINs will be **rejected** by retailers.',
                        unsafe_allow_html=True)
             for r in critical_items:
                 with st.expander(f"Row {r.row_number}: {r.raw_input}"):
@@ -370,8 +375,8 @@ if gtins_to_validate:
                             st.markdown("---")
 
         if warning_items:
-            st.markdown(f'<span class="badge-warning">WARNING</span> — '
-                       f'These GTINs may cause problems.',
+            st.markdown('<span class="badge-warning">WARNING</span> — '
+                       'These GTINs may cause problems.',
                        unsafe_allow_html=True)
             for r in warning_items:
                 with st.expander(f"Row {r.row_number}: {r.raw_input}"):
@@ -381,8 +386,8 @@ if gtins_to_validate:
                         st.markdown(f"**Retailer impact:** {issue.retailer_impact}")
 
         if info_items:
-            st.markdown(f'<span class="badge-info">INFO</span> — '
-                       f'Best practice notes.',
+            st.markdown('<span class="badge-info">INFO</span> — '
+                       'Best practice notes.',
                        unsafe_allow_html=True)
             for r in info_items:
                 with st.expander(f"Row {r.row_number}: {r.raw_input}"):
@@ -538,7 +543,7 @@ if gtins_to_validate:
                                    unsafe_allow_html=True)
                         st.caption(item["impact_detail"])
                     with col_t:
-                        st.markdown(f"**Time estimate:**")
+                        st.markdown("**Time estimate:**")
                         st.caption(item["time_estimate"])
 
                     st.markdown(f"**Full recommendation:** {item['action']}")
@@ -561,7 +566,10 @@ if gtins_to_validate:
 
         for retailer_name, checklist in retailers_to_show.items():
             ready_class = "retailer-ready" if checklist["ready"] else "retailer-not-ready"
-            status_text = "✅ READY" if checklist["ready"] else f"❌ {checklist['passed']}/{checklist['total']} checks passed"
+            if checklist["ready"]:
+                status_text = "✅ READY"
+            else:
+                status_text = f"❌ {checklist['passed']}/{checklist['total']} checks passed"
 
             st.markdown(f"""
             <div class="retailer-card {ready_class}">

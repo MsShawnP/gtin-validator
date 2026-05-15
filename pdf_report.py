@@ -3,20 +3,27 @@ PDF Report Generator for GTIN Validator.
 Produces a branded, professional PDF report using reportlab.
 """
 
+from collections import defaultdict
+from datetime import datetime
+from io import BytesIO
+
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    PageBreak, HRFlowable, KeepTogether
+    HRFlowable,
+    KeepTogether,
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
 )
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from io import BytesIO
-from datetime import datetime
-from collections import defaultdict
-from gtin_core import Severity
 
+from gtin_core import Severity
 
 # Colors
 DARK = colors.HexColor("#1a1a2e")
@@ -462,8 +469,11 @@ def generate_pdf_report(validation_data: dict, company_name: str = "") -> BytesI
         ))
         elements.append(Spacer(1, 8))
 
-        single_critical = [r for r in critical_items if len([i for i in r.issues if i.severity == Severity.CRITICAL]) == 1]
-        multi_critical = [r for r in critical_items if len([i for i in r.issues if i.severity == Severity.CRITICAL]) > 1]
+        def count_by_severity(r, sev):
+            return len([i for i in r.issues if i.severity == sev])
+
+        single_critical = [r for r in critical_items if count_by_severity(r, Severity.CRITICAL) == 1]
+        multi_critical = [r for r in critical_items if count_by_severity(r, Severity.CRITICAL) > 1]
 
         if single_critical:
             crit_groups = defaultdict(list)
@@ -488,7 +498,7 @@ def generate_pdf_report(validation_data: dict, company_name: str = "") -> BytesI
                 )
 
         if multi_critical:
-            multi_critical.sort(key=lambda r: len([i for i in r.issues if i.severity == Severity.CRITICAL]), reverse=True)
+            multi_critical.sort(key=lambda r: count_by_severity(r, Severity.CRITICAL), reverse=True)
             render_multi_issue_group(
                 "Items with Multiple Critical Issues", multi_critical,
                 RED, body_style, small_style, elements,
