@@ -1,8 +1,148 @@
-# GTIN Validator — Improvement Plan
+# GTIN Validator — Prospect-Readiness Plan
 
-**Source:** Full project audit (2026-05-15)
+**Source:** Full project audit v2 (2026-05-16)
 **Tier:** Medium
-**Status:** Complete — all 10 goals shipped (2026-05-15)
+**Status:** Complete — all 7 goals shipped (2026-05-16, PR #12)
+**Prior plan:** Complete — all 10 goals from v1 audit shipped (2026-05-15)
+
+---
+
+## Decomposition: All Prospect Demo Fixes
+
+All 7 goals are independent — no dependencies between them. Grouped into two batches by file location for efficient execution.
+
+### Batch A — Frontend fixes (Goals 1, 2, 4, 7)
+
+- [x] 1.1: Fix page title in `frontend/index.html` — change `<title>frontend</title>` to `<title>GTIN Product Data Validator</title>`
+    - Depends on: none
+    - Done when: browser tab shows "GTIN Product Data Validator"
+- [x] 1.2: Add meta description + OG tags to `frontend/index.html`
+    - Depends on: 1.1
+    - Done when: `<meta name="description">`, `og:title`, `og:description`, `og:type` all present
+- [x] 2.1: Add error state to `DownloadButton` in `frontend/src/components/DownloadReports.tsx` — catch errors in onClick, display message below button
+    - Depends on: none
+    - Done when: simulating a failed download (e.g. expired token) shows an error message instead of silent failure
+- [x] 4.1: Add empty-paste guard in `frontend/src/components/InputSection.tsx` — show inline message when user clicks Validate with empty textarea
+    - Depends on: none
+    - Done when: clicking "Validate GTINs" with empty text shows "Paste some GTINs first" (or similar); message clears on typing
+- [x] 7.1: Add AbortController with 30s timeout to `request()` in `frontend/src/api.ts`
+    - Depends on: none
+    - Done when: `request()` aborts after 30s and throws an error with a user-friendly message
+- [x] 7.2: Add timeout to `downloadBlob()` in `frontend/src/api.ts`
+    - Depends on: none
+    - Done when: download calls also abort after 30s with friendly message
+- [x] A.verify: Build frontend — `cd frontend && npm run build`
+    - Depends on: 1.1, 1.2, 2.1, 4.1, 7.1, 7.2
+    - Done when: build succeeds with no TypeScript errors
+
+### Batch B — Backend fixes (Goals 3, 5, 6)
+
+- [x] 3.1: Sanitize error message in `backend/routes/validate.py:101-102` — replace `f"Error reading file: {exc}"` with generic message, log the real error
+    - Depends on: none
+    - Done when: uploading a malformed file returns "Could not read file. Please check the format." (not Python internals)
+- [x] 5.1: Add filename sanitization helper in `backend/routes/reports.py` — strip everything except alphanumeric, hyphens, underscores from company_name
+    - Depends on: none
+    - Done when: `company_name="Café & Co."` produces filename `Caf_Co_report.csv`, not `Café_&_Co._report.csv`
+- [x] 6.1: Change `async def validate_upload` to `def validate_upload` in `backend/routes/validate.py` — replace `await file.read()` with `file.file.read()`
+    - Depends on: none
+    - Done when: endpoint still works, `pytest tests_api.py -v` passes
+- [x] B.verify: Run all backend tests — `pytest tests.py tests_api.py -v`
+    - Depends on: 3.1, 5.1, 6.1
+    - Done when: all 83 tests pass
+
+### Final verification
+- [x] F.1: Run full CI checks locally — tests, lint, typecheck, frontend build
+    - Depends on: A.verify, B.verify
+    - Done when: all pass clean
+
+---
+
+## Prospect Demo Fixes (from Audit v2, Phase 4)
+
+### Goal 1: Fix page title + add meta/OG tags
+**Source:** Audit Phase 4, Move #2
+**Category:** Foundational
+**Priority:** 1
+
+**Objective:** Replace Vite default `<title>frontend</title>` with proper title, add meta description and OpenGraph tags for professional link sharing.
+
+**Success Criteria:**
+- Browser tab says "GTIN Product Data Validator"
+- Sharing URL in Slack/email shows title, description, and (optionally) preview image
+- `frontend/index.html` has `<meta name="description">`, `og:title`, `og:description`
+
+### Goal 2: Fix download error handling
+**Source:** Audit Phase 4, Move #1
+**Category:** Double down (protects unique differentiator)
+**Priority:** 2
+
+**Objective:** DownloadButton shows an error message when download fails instead of silently swallowing it.
+
+**Success Criteria:**
+- Failed download shows user-friendly error (e.g., "Download failed. Try again.")
+- Loading spinner stops on error (already works)
+- Error clears when user retries
+
+**Context:** Branded PDF is a unique differentiator — no competitor offers it. Silent failures break this during a demo.
+
+### Goal 3: Sanitize error messages
+**Source:** Audit Phase 4, Move #3
+**Category:** Foundational
+**Priority:** 3
+
+**Objective:** Replace raw exception messages in API responses with user-friendly text. Log full errors server-side.
+
+**Success Criteria:**
+- `backend/routes/validate.py:101-102` no longer exposes `{exc}` to client
+- Error message says something like "Could not read file. Please check the format."
+- Full exception still logged for debugging
+
+### Goal 4: Add empty-paste feedback
+**Source:** Audit Phase 4, Move #4
+**Category:** Foundational
+**Priority:** 4
+
+**Objective:** Show feedback when user clicks "Validate GTINs" with empty textarea.
+
+**Success Criteria:**
+- Empty paste + click shows a message like "Paste some GTINs first"
+- Message clears when user starts typing
+
+### Goal 5: Sanitize company_name in filenames
+**Source:** Audit Phase 4, Move #6
+**Category:** Foundational
+**Priority:** 5
+
+**Objective:** Strip special characters from company_name before using it in Content-Disposition filename.
+
+**Success Criteria:**
+- Only alphanumeric, hyphens, underscores in filenames
+- company_name with special chars produces clean filename
+- Empty company_name still falls back to "gtin_report"
+
+### Goal 6: Fix async/sync in validate_upload
+**Source:** Audit Phase 4, Move #7
+**Category:** Foundational
+**Priority:** 6
+
+**Objective:** Change `async def validate_upload` to `def validate_upload` so FastAPI runs it in a threadpool instead of blocking the event loop.
+
+**Success Criteria:**
+- Endpoint works identically (same inputs/outputs)
+- `file.read()` call updated from `await file.read()` to sync equivalent
+- All API tests pass
+
+### Goal 7: Add API timeout with friendly message
+**Source:** Audit Phase 4, Move #8
+**Category:** Foundational
+**Priority:** 7
+
+**Objective:** Add AbortController with 30-second timeout to frontend fetch calls. Show friendly message instead of infinite spinner.
+
+**Success Criteria:**
+- API calls abort after 30 seconds
+- User sees "Request timed out — the server may be starting up. Try again in a moment." instead of infinite spinner
+- Normal requests unaffected
 
 ---
 
@@ -11,32 +151,32 @@
 ### Sprint 1 — Fix what's broken (~1-2 hours)
 
 **Goal 1: Fix Readiness Score Accuracy**
-- [ ] 1.1: Change `UPC_NOT_GTIN13` severity from `Severity.WARNING` to `Severity.INFO` in `gtin_core.py:349`
+- [x] 1.1: Change `UPC_NOT_GTIN13` severity from `Severity.WARNING` to `Severity.INFO` in `gtin_core.py:349`
     - Depends on: none
     - Done when: `validate_single_gtin("614141000012", 1)` produces an INFO issue, not WARNING
-- [ ] 1.2: Update `test_upc_gtin13_warning` to assert INFO severity instead of WARNING
+- [x] 1.2: Update `test_upc_gtin13_warning` to assert INFO severity instead of WARNING
     - Depends on: 1.1
     - Done when: `pytest tests.py::TestSingleValidation::test_upc_gtin13_warning -v` passes
-- [ ] 1.3: Add test: a batch of 5 valid GTIN-12s (no other issues) scores 70+
+- [x] 1.3: Add test: a batch of 5 valid GTIN-12s (no other issues) scores 70+
     - Depends on: 1.1
     - Done when: new test passes, confirming valid UPC-only datasets no longer penalized
-- [ ] 1.4: Run full test suite, verify no regressions
+- [x] 1.4: Run full test suite, verify no regressions
     - Depends on: 1.1, 1.2, 1.3
     - Done when: `pytest tests.py -v` — all tests pass
 
 **Goal 2: Fix Dead Code and Add Input Guard**
-- [ ] 2.1: Remove the redundant `report_title` reassignment at `pdf_report.py:124-125`
+- [x] 2.1: Remove the redundant `report_title` reassignment at `pdf_report.py:124-125`
     - Depends on: none
     - Done when: the `if company_name:` block either sets a different title or is removed
-- [ ] 2.2: Add paste input size cap (10,000 lines) with warning in `app.py` near line 188
+- [x] 2.2: Add paste input size cap (10,000 lines) with warning in `app.py` near line 188
     - Depends on: none
     - Done when: pasting >10K lines shows a warning and truncates/refuses, pasting <10K works normally
-- [ ] 2.3: Run full test suite
+- [x] 2.3: Run full test suite
     - Depends on: 2.1, 2.2
     - Done when: `pytest tests.py -v` — all tests pass
 
 **Goal 3: Add Project CLAUDE.md**
-- [ ] 3.1: Write `CLAUDE.md` in project root covering stack, file roles, test commands, deployment, current focus
+- [x] 3.1: Write `CLAUDE.md` in project root covering stack, file roles, test commands, deployment, current focus
     - Depends on: none
     - Done when: file exists and a fresh Claude Code session would have project context without reading every file
 
@@ -45,35 +185,35 @@
 ### Sprint 2 — Engineering foundation (~2-3 hours)
 
 **Goal 4: Evaluate and Merge Security Branch**
-- [ ] 4.1: Review `origin/claude/security-code-audit-6k0Fg` diff against main — list each commit with keep/skip/adapt verdict
+- [x] 4.1: Review `origin/claude/security-code-audit-6k0Fg` diff against main — list each commit with keep/skip/adapt verdict
     - Depends on: none
     - Done when: written verdict for each of the 5 commits on the branch
-- [ ] 4.2: Cherry-pick or adapt viable commits (CI workflow, tests, robustness fixes)
+- [x] 4.2: Cherry-pick or adapt viable commits (CI workflow, tests, robustness fixes)
     - Depends on: 4.1
     - Done when: selected work applied to current branch without conflicts
-- [ ] 4.3: Run full test suite after cherry-picks
+- [x] 4.3: Run full test suite after cherry-picks
     - Depends on: 4.2
     - Done when: `pytest tests.py -v` — all tests pass (including any new tests from the branch)
 
 **Goal 5: Add CI/CD with Green README Badge**
-- [ ] 5.1: Create `.github/workflows/ci.yml` — pytest on push to main + PRs, Python 3.10/3.12 matrix
+- [x] 5.1: Create `.github/workflows/ci.yml` — pytest on push to main + PRs, Python 3.10/3.12 matrix
     - Depends on: 4.2 (may reuse CI from security branch)
     - Done when: workflow file exists with correct syntax (`actionlint` or manual review)
-- [ ] 5.2: Add green badge markdown to top of `README.md`
+- [x] 5.2: Add green badge markdown to top of `README.md`
     - Depends on: 5.1
     - Done when: badge markup in README references the correct workflow
-- [ ] 5.3: Push and verify CI passes on GitHub
+- [x] 5.3: Push and verify CI passes on GitHub
     - Depends on: 5.1, 5.2
     - Done when: GitHub Actions shows green check on the pushed commit
 
 **Goal 6: Add Linting and Type Checking Config**
-- [ ] 6.1: Add ruff config to `pyproject.toml`, run `ruff check .`, fix or suppress issues
+- [x] 6.1: Add ruff config to `pyproject.toml`, run `ruff check .`, fix or suppress issues
     - Depends on: none
     - Done when: `ruff check .` exits clean
-- [ ] 6.2: Add mypy config to `pyproject.toml`, run `mypy`, fix or annotate critical issues
+- [x] 6.2: Add mypy config to `pyproject.toml`, run `mypy`, fix or annotate critical issues
     - Depends on: none
     - Done when: `mypy` exits with 0 errors (warnings acceptable)
-- [ ] 6.3: Add ruff + mypy steps to CI workflow
+- [x] 6.3: Add ruff + mypy steps to CI workflow
     - Depends on: 5.1, 6.1, 6.2
     - Done when: CI workflow includes lint and type-check steps
 
@@ -82,46 +222,46 @@
 ### Sprint 3 — Strengthen differentiators (~3-4 hours)
 
 **Goal 7: Surface Company Name in Main Flow**
-- [ ] 7.1: Move company name `text_input` from sidebar to the main flow (above or alongside the action buttons)
+- [x] 7.1: Move company name `text_input` from sidebar to the main flow (above or alongside the action buttons)
     - Depends on: none
     - Done when: company name input visible on page load without opening sidebar
-- [ ] 7.2: Verify PDF report receives the company name and renders it correctly
+- [x] 7.2: Verify PDF report receives the company name and renders it correctly
     - Depends on: 7.1
     - Done when: downloading a PDF after entering a company name shows the name in the report
-- [ ] 7.3: Clean up sidebar — remove the company name input, keep retailer filter and "How it works"
+- [x] 7.3: Clean up sidebar — remove the company name input, keep retailer filter and "How it works"
     - Depends on: 7.1
     - Done when: sidebar no longer has a duplicate company name field
 
 **Goal 8: Add Report Generator Tests**
-- [ ] 8.1: Add CSV report smoke tests — call `generate_csv_report` with valid data, verify returns non-empty string with expected headers
+- [x] 8.1: Add CSV report smoke tests — call `generate_csv_report` with valid data, verify returns non-empty string with expected headers
     - Depends on: none
     - Done when: new tests pass in `pytest tests.py -v`
-- [ ] 8.2: Add PDF report smoke tests — call `generate_pdf_report` with valid data, verify returns non-empty BytesIO
+- [x] 8.2: Add PDF report smoke tests — call `generate_pdf_report` with valid data, verify returns non-empty BytesIO
     - Depends on: none
     - Done when: new tests pass
-- [ ] 8.3: Add edge case tests — empty results, all-critical dataset, no-issues dataset, missing company name
+- [x] 8.3: Add edge case tests — empty results, all-critical dataset, no-issues dataset, missing company name
     - Depends on: 8.1, 8.2
     - Done when: all edge case tests pass without exceptions
 
 **Goal 9: TypedDict for validate_batch Return**
-- [ ] 9.1: Define `ValidationData` TypedDict (and sub-types for summary, score, cost) in `gtin_core.py`
+- [x] 9.1: Define `ValidationData` TypedDict (and sub-types for summary, score, cost) in `gtin_core.py`
     - Depends on: none
     - Done when: types defined and `validate_batch` return type annotated
-- [ ] 9.2: Update `validate_batch` to construct and return the typed structure
+- [x] 9.2: Update `validate_batch` to construct and return the typed structure
     - Depends on: 9.1
     - Done when: `validate_batch` returns `ValidationData`, all existing tests pass
-- [ ] 9.3: Update type annotations in consumers — `app.py`, `pdf_report.py`, `csv_report.py`
+- [x] 9.3: Update type annotations in consumers — `app.py`, `pdf_report.py`, `csv_report.py`
     - Depends on: 9.1, 9.2
     - Done when: function signatures reference the new types
-- [ ] 9.4: Run mypy, confirm type safety across the codebase
+- [x] 9.4: Run mypy, confirm type safety across the codebase
     - Depends on: 6.2, 9.3
     - Done when: `mypy` shows no new errors related to validation data access
 
 **Goal 10: Deduplicate PDF Report Rendering**
-- [ ] 10.1: Consolidate `render_group_with_continuation` and `render_multi_issue_group` into a single function with optional `recommendation_text` parameter
+- [x] 10.1: Consolidate `render_group_with_continuation` and `render_multi_issue_group` into a single function with optional `recommendation_text` parameter
     - Depends on: 8.2 (report tests provide safety net)
     - Done when: one function, ~80 lines removed, all tests pass
-- [ ] 10.2: Verify PDF output — generate PDF with sample data, confirm structure is unchanged
+- [x] 10.2: Verify PDF output — generate PDF with sample data, confirm structure is unchanged
     - Depends on: 10.1
     - Done when: PDF has same sections, groupings, and page breaks as before
 

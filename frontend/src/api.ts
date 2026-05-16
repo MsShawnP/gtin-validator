@@ -11,12 +11,23 @@ class ApiError extends Error {
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${url}`, init)
-  if (!res.ok) {
-    const text = await res.text()
-    throw new ApiError(res.status, text)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30_000)
+  try {
+    const res = await fetch(`${BASE}${url}`, { ...init, signal: controller.signal })
+    if (!res.ok) {
+      const text = await res.text()
+      throw new ApiError(res.status, text)
+    }
+    return res.json()
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'AbortError') {
+      throw new Error('Request timed out — the server may be starting up. Try again in a moment.')
+    }
+    throw e
+  } finally {
+    clearTimeout(timeout)
   }
-  return res.json()
 }
 
 export async function validateGtins(gtins: string[]): Promise<ValidationResponse> {
@@ -53,9 +64,20 @@ export async function fetchCompleteness(token: string): Promise<DataCompleteness
 }
 
 async function downloadBlob(url: string): Promise<Blob> {
-  const res = await fetch(`${BASE}${url}`)
-  if (!res.ok) throw new ApiError(res.status, await res.text())
-  return res.blob()
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30_000)
+  try {
+    const res = await fetch(`${BASE}${url}`, { signal: controller.signal })
+    if (!res.ok) throw new ApiError(res.status, await res.text())
+    return res.blob()
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'AbortError') {
+      throw new Error('Request timed out — the server may be starting up. Try again in a moment.')
+    }
+    throw e
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 function triggerDownload(blob: Blob, filename: string) {

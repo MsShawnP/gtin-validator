@@ -77,14 +77,14 @@ def validate_text(body: ValidateTextRequest) -> dict:
 
 
 @router.post("/validate/upload", response_model=ValidationResponse)
-async def validate_upload(
+def validate_upload(
     file: UploadFile,
     gtin_column: str | None = None,
 ) -> dict:
     if not file.filename:
         raise HTTPException(400, "No file provided.")
 
-    content = await file.read()
+    content = file.file.read()
     if len(content) > MAX_FILE_BYTES:
         raise HTTPException(413, "File exceeds 10 MB limit.")
 
@@ -98,8 +98,8 @@ async def validate_upload(
             raise HTTPException(400, "Unsupported file type. Upload CSV or Excel.")
     except HTTPException:
         raise
-    except Exception as exc:
-        raise HTTPException(400, f"Error reading file: {exc}") from exc
+    except Exception:
+        raise HTTPException(400, "Could not read file. Please upload a valid CSV or Excel file.")
 
     if df.empty:
         raise HTTPException(400, "File is empty.")

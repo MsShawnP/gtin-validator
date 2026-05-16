@@ -24,3 +24,13 @@
 **Decision:** Merge `render_group_with_continuation` and `render_multi_issue_group` into a single `render_item_group` function with optional `recommendation_text` parameter.
 
 **Why:** ~80 lines of near-identical pagination logic. One function handles both cases with a conditional header height.
+
+## 2026-05-16: Never expose raw exceptions in API error responses
+
+**Decision:** Backend error handlers must return user-friendly messages to the client. Raw Python exceptions (`str(exc)`, `f"...{exc}"`) must not appear in HTTPException detail strings.
+
+**Why:** A prospect uploading a malformed file saw Python stack traces in the UI error banner, undermining credibility. Friendly messages for the client; full details logged server-side.
+
+**Scope:** All backend error handlers in `backend/routes/`.
+
+**Do not:** Use `f"...{exc}"` or `str(exc)` in HTTPException detail messages. Log the real exception with `logger.error()` or let it propagate to FastAPI's default 500 handler.

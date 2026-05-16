@@ -1,198 +1,169 @@
 # Project Audit
 
 ## Phase 1: Baseline Assessment
-**Date:** 2026-05-15
+**Date:** 2026-05-16
 **Project:** GTIN Product Data Validator
+**Audit lens:** Prospect-readiness — anything that could undermine credibility during a live demo
 
 ### What Was Intended
-A GTIN validation tool serving dual purpose:
-1. **Portfolio piece** — demonstrate product data consulting capabilities to prospects evaluating the user's skills
-2. **Practical tool** — give a friend at a target prospect company a way to upload their dirty dataset and catch GTIN errors causing retailer deductions
-
-Three audiences: the user (consulting demos), prospects (capability evaluation), and clients (actual GTIN validation).
+Dual-purpose tool:
+1. **Portfolio piece** — demonstrate product data consulting expertise to prospective clients
+2. **Practical diagnostic** — evaluate how clean/dirty a client's GTIN data is before engagement
 
 ### What Exists Today
-A fully functional Streamlit web app, deployed live on Streamlit Community Cloud. Core promise is delivered:
+A fully functional FastAPI + React SPA deployed on Render. The tool works end-to-end:
 
-- Sample data demo with intentional errors and fix guidance
-- CSV upload for real company data
-- GS1 check digit validation, format checking, duplicate detection, hierarchy analysis
+- Paste or upload GTINs → batch validation against GS1 standards
 - Retailer-specific checklists (Walmart, Costco, UNFI, KeHE, Whole Foods, 1WorldSync)
-- Readiness scoring (0-100), cost-of-inaction estimates, prioritized fix plans
-- Branded PDF and CSV report downloads
-- Executive summary generation, case GTIN-14 generator, data completeness analysis
+- Readiness scoring (0–100), cost-of-inaction estimates, prioritized fix plans
+- Branded PDF report, CSV export, corrected GTIN download
+- Executive summary, packaging hierarchy analysis, GTIN-14 case generator
+- Sample data demo with intentional errors
 
-The app works end-to-end. No known broken features.
+Recently migrated from Streamlit (May 15). All 10 items from the prior audit have been completed.
 
 ### Tech Stack
 | Layer | Technology |
 |-------|-----------|
-| UI framework | Streamlit >=1.53.0 |
-| Data processing | pandas >=2.0.0 |
-| PDF generation | reportlab >=4.0.0 |
-| Testing | pytest >=7.0.0 |
-| Python | 3.10+ |
-| Hosting | Streamlit Community Cloud |
-| Styling | Custom CSS (273 LOC) |
-
-No backend, no database, no auth. All processing is in-session.
+| Backend | Python 3.10+ / FastAPI / pandas / reportlab |
+| Frontend | React 19 / Vite / TypeScript (strict) |
+| Hosting | Render free tier (Docker, auto-deploys from main) |
+| CI | GitHub Actions — 6 jobs: test (3.10/3.12/3.13 matrix), test-api, lint (ruff), typecheck (mypy), frontend-build, pip-audit |
+| Tests | pytest (83 tests: 63 core + 20 API) |
+| State | In-memory cache (TTL 30 min, max 100 sessions) — no database, no auth |
 
 ### Codebase Size
-| File | Lines | Role |
-|------|-------|------|
-| gtin_core.py | 1,256 | Validation engine, scoring, retailer rules |
-| app.py | 757 | Streamlit UI |
-| pdf_report.py | 596 | Branded PDF report |
-| tests.py | 388 | pytest suite |
-| csv_report.py | 74 | CSV export |
-| sample_data.py | 72 | Demo dataset |
-| styles/app.css | 273 | Custom component styling |
-| **Total** | **3,416** | |
+| Area | Files | LOC | Notes |
+|------|-------|-----|-------|
+| Core logic | gtin_core.py | 1,277 | Validation engine, scoring, retailer rules |
+| Backend | 7 files | 656 | FastAPI routes, schemas, cache, serializers |
+| Frontend | 13 files | 1,441 | React components, API client, types, reducer |
+| Reports | pdf_report.py, csv_report.py | 655 | PDF + CSV export |
+| Tests | tests.py, tests_api.py | 752 | 83 test functions |
+| Support | sample_data.py | 72 | Demo dataset |
+| **Total** | | **~4,850** | |
 
 ### Project Health Indicators
-- **Activity:** Active — 14 commits, all recent, solo contributor
-- **Documentation:** README is strong; no architecture docs, decision records, or project-level CLAUDE.md
-- **Test coverage:** Partial — 388 LOC of tests covering core validation (check digits, type detection, single GTIN validation, retailer checklists, data completeness). No UI tests, no report generation tests, no integration tests.
-- **Dependencies:** Current and minimal (3 runtime deps). No known vulnerabilities flagged.
-- **Code quality:** One prior review pass with Claude Code. Clean separation between core logic, UI, and reports.
+- **Activity:** Active — 44 commits over 2 weeks (May 1–15), sole contributor + Claude co-authored
+- **Documentation:** Strong — README, CLAUDE.md, PLAN.md, DECISIONS.md, HANDOFF.md all current
+- **Test coverage:** Good for core + API — 83 tests, 0.8s runtime. No frontend tests.
+- **Dependencies:** Current, audited via pip-audit in CI. No known vulnerabilities.
+- **CI/CD:** 6-job pipeline, green badge in README. Auto-deploy from main via Render.
+- **Code quality:** ruff (lint) + mypy (typecheck) enforced in CI. TypedDict for central data structures.
 
 ### Gap Analysis
-The project delivers on its original intent — it validates GTINs and shows what's wrong. Gaps are around **depth and polish**, not missing fundamentals:
+The project is in strong shape after the recent migration and prior audit. The delta between "works" and "prospect-ready" is mostly about **demo polish and first impressions**:
 
-1. **No project-level CLAUDE.md** — future sessions start cold without project context
-2. **Test coverage is shallow** — core validation is tested but report generation, UI flows, edge cases in batch processing, and error paths are not
-3. **No architecture/decision docs** — the "why" behind design choices isn't captured
-4. **Built with Claude Chat initially** — code may have patterns that a structured review would tighten (naming, abstractions, dead code, consistency)
-5. **Portfolio positioning** — as a portfolio piece, the code quality and structure IS the product. Any rough edges in the code undermine the consulting pitch.
-6. **No CI/CD** — no GitHub Actions, no automated test runs on push
-7. **Security review branch exists** (`origin/claude/security-code-audit-6k0Fg`) — unclear if findings were merged
+1. **Demo flow untested** — the app works, but has anyone walked through the exact demo path a prospect would see? (paste sample → review results → download PDF → show corrections)
+2. **Render cold start** — free tier spins down after inactivity. First load could take 30+ seconds, which kills a demo.
+3. **Mobile/responsive** — prospect might pull it up on a phone after the meeting
+4. **No frontend tests** — 83 backend tests, zero frontend tests. React components untested.
+5. **Post-migration polish** — the UI was rebuilt 1 day ago. Edge cases, copy, layout issues from the migration may not have been caught yet.
+6. **Old Streamlit app still live** — potential confusion if prospect finds both URLs
 
 ### Audit Motivation
-The project was built with Claude Chat and had one lighter review pass with Claude Code. This audit is the first structured, multi-phase review — the user wants to find what a more rigorous process surfaces before considering the project "done."
+Getting ready to show the tool to a prospective client. The audit should surface anything that would undermine credibility during a live demo — broken flows, slow loads, rough UI edges, confusing copy, or professional polish gaps.
 
 ---
 
 ## Phase 2: Internal Review
-**Date:** 2026-05-15
+**Date:** 2026-05-16
+**Lens:** Prospect-demo readiness
 **Dimensions reviewed:** Code Quality, Architecture, Tests, Documentation, Performance, Security, UX, DevEx
 
 ### Top Opportunities (by leverage)
 
 | # | Finding | Dimension | Impact | Effort | Leverage | Severity |
 |---|---------|-----------|--------|--------|----------|----------|
-| 1 | Every UPC-A gets a WARNING, inflating issues and penalizing readiness score for the primary US audience | Code Quality | 5 | 1 | 5.0 | critical |
-| 2 | No CI/CD — tests don't run on push, no green badge for portfolio | DevEx | 4 | 1 | 4.0 | important |
-| 3 | Unmerged security branch has CI, tests, and refactoring — prior work sitting unused | DevEx | 4 | 1 | 4.0 | important |
-| 4 | No project CLAUDE.md — every session starts cold | Documentation | 3 | 1 | 3.0 | important |
-| 5 | Sidebar collapsed by default hides company name and retailer filter | UX | 3 | 1 | 3.0 | important |
-| 6 | validate_batch returns untyped dict — central data structure has no type contract | Code Quality | 4 | 2 | 2.0 | important |
-| 7 | No tests for PDF/CSV report generators — crash at download time would be invisible | Tests | 4 | 2 | 2.0 | important |
-| 8 | No linting or type checking configured (ruff, mypy) | DevEx | 3 | 1 | 3.0 | minor |
-| 9 | No input size guard on paste — user could crash session with 100K lines | Security | 2 | 1 | 2.0 | minor |
-| 10 | pdf_report.py has ~80 lines of near-identical rendering logic | Code Quality | 3 | 2 | 1.5 | important |
-| 11 | pdf_report.py:125 dead code — reassigns identical string in company_name branch | Code Quality | 1 | 1 | 1.0 | minor |
-| 12 | Custom HTML components lack ARIA attributes for screen readers | UX | 3 | 3 | 1.0 | minor |
-| 13 | No architecture docs for portfolio reviewers who read beyond README | Documentation | 2 | 2 | 1.0 | minor |
+| 1 | Browser tab title says "frontend" | UX | 5 | 1 | 5.0 | critical |
+| 2 | Download buttons swallow errors silently — click, spinner stops, nothing happens | UX | 5 | 1 | 5.0 | critical |
+| 3 | Error messages expose Python stack traces to client | Security | 4 | 1 | 4.0 | critical |
+| 4 | Empty paste silently does nothing — looks broken | UX | 4 | 1 | 4.0 | important |
+| 5 | No meta description, OG tags, or favicon label — shared link shows generic preview | UX | 3 | 1 | 3.0 | important |
+| 6 | company_name in Content-Disposition not sanitized — allows special chars in filename/headers | Security | 3 | 1 | 3.0 | important |
+| 7 | No fetch timeout — API call hangs forever if Render is slow | UX | 3 | 2 | 1.5 | important |
+| 8 | validate_upload is async but calls sync validation — blocks event loop under load | Performance | 2 | 2 | 1.0 | minor |
+| 9 | No keyboard focus indicators on buttons/links | UX | 2 | 1 | 2.0 | minor |
+| 10 | Error banner missing role="alert" for screen readers | UX | 1 | 1 | 1.0 | minor |
+| 11 | Cache operations have no thread safety (dict mutation without locks) | Code Quality | 2 | 2 | 1.0 | minor |
+| 12 | No frontend tests at all — 0 React component tests | Tests | 2 | 4 | 0.5 | minor |
 
 ### Detailed Findings
 
-#### Code Quality
+#### UX (prospect-facing issues)
 
-**#1 — UPC-A WARNING inflates issues (CRITICAL finding)**
-`gtin_core.py:349-368` — Every valid 12-digit UPC-A triggers a `UPC_NOT_GTIN13` WARNING. Combined with `NO_CASE_GTIN` (line 466), a perfectly valid UPC-A dataset gets 2 warnings per item.
+**#1 — Browser tab says "frontend" (CRITICAL)**
+`frontend/index.html:7` — `<title>frontend</title>`. This is the Vite template default. When a prospect opens the tool, the browser tab says "frontend" instead of "GTIN Product Data Validator." Instant credibility loss.
 
-The scoring formula (`gtin_core.py:735`): `warning_penalty = (warning_count / total) * 15`. If all GTINs are valid UPC-As with no case GTINs, every item has warnings → penalty is 15 points → max score is 55 (Grade C). **A dataset of perfectly valid UPCs gets a C.** This undermines trust in the tool for the primary audience: US specialty food brands where UPC-A is the standard.
+**#2 — Download buttons fail silently (CRITICAL)**
+`frontend/src/components/DownloadReports.tsx:23-29` — The `DownloadButton` component catches errors in try/finally but never displays them. If a download fails (network error, expired token, server error), the loading spinner stops and nothing happens. The user clicks, waits, and gets nothing — looks broken during a demo.
 
-Fix: Downgrade `UPC_NOT_GTIN13` to INFO severity (it's advisory, not actionable for US retailers). Or make it conditional on retailer context.
+`frontend/src/api.ts:55-58` — The `downloadBlob` function throws `ApiError` on failure, but nothing catches it in the download flow. The error propagates to the DownloadButton's `onClick`, which silently swallows it.
 
-**#6 — validate_batch returns untyped dict**
-`gtin_core.py:385-516` — The central data structure flowing through the entire app (UI, PDF, CSV, scoring) is a plain `dict`. Keys like `"results"`, `"summary"`, `"score"`, `"cost_estimate"` are accessed by string throughout app.py, pdf_report.py, and csv_report.py. A misspelled key produces a runtime KeyError with no type-checker warning.
+**#4 — Empty paste does nothing**
+`frontend/src/components/InputSection.tsx:63` — `if (!lines.length) return` exits silently when the user clicks "Validate GTINs" with empty input. No error message, no visual feedback. During a demo, this looks like a broken button.
 
-For a portfolio piece demonstrating Python skill, this is a missed opportunity. A `TypedDict` or `@dataclass` would make the code self-documenting and show type system fluency.
+**#5 — No meta tags for link sharing**
+`frontend/index.html` — No `<meta name="description">`, no OpenGraph tags (`og:title`, `og:description`, `og:image`), no Twitter card tags. If the prospect copies the URL into Slack or email, it renders as a bare link with "frontend" as the preview title. Missed opportunity to look professional when shared.
 
-**#10 — Duplicated rendering logic in pdf_report.py**
-`pdf_report.py:375-455` — `render_group_with_continuation` and `render_multi_issue_group` are nearly identical functions. Both: estimate heights, try KeepTogether, fall back to chunked pages with "continued" headers. The only difference is one accepts a `recommendation_text` parameter. ~80 lines of duplication.
+**#7 — No API timeout**
+`frontend/src/api.ts:14` — `fetch()` calls have no `AbortController` or timeout. If Render's free tier is slow to respond (cold start, overloaded), the UI shows the loading spinner indefinitely with no feedback. Should abort after 30 seconds with a friendly message.
 
-**#11 — Dead code in pdf_report.py**
-`pdf_report.py:124-125`:
-```python
-report_title = "Product Data Validation Report"
-if company_name:
-    report_title = f"Product Data Validation Report"  # same string
-```
-The if-branch reassigns the exact same value. Leftover from when the title was supposed to include `company_name`.
-
-#### Architecture
-
-Overall architecture is clean: core engine → UI / reports. No circular dependencies. gtin_core.py has zero UI imports. Good separation.
-
-No significant architectural issues. The `validate_batch` function (130 lines) does a lot but is sequential and readable. Breaking it up would add indirection without clear benefit at this scale.
-
-#### Tests
-
-**#7 — No tests for report generators**
-`pdf_report.py` (596 LOC) and `csv_report.py` (74 LOC) are completely untested. A PDF generation failure (e.g., from unexpected data in a GTINResult) would crash at download time — after the user already sees their results and tries to export.
-
-Minimum needed: smoke tests that call `generate_pdf_report` and `generate_csv_report` with various validation_data shapes and assert they return valid output without exceptions.
-
-50 existing tests all pass (0.8s). Test quality is good — focused assertions, testing behavior not implementation. Coverage of core validation logic is solid.
-
-#### Documentation
-
-**#4 — No project CLAUDE.md**
-Every Claude Code session starts cold. A project CLAUDE.md with stack, conventions, key files, and current focus would save 5-10 minutes per session.
-
-**#13 — No architecture docs**
-For a portfolio piece, a prospect who reads beyond the README and into the code has no guide. A brief architecture overview (data flow, module responsibilities) would demonstrate systems thinking.
-
-README.md itself is strong — clear features, audience, technical notes, standards references.
-
-#### Performance
-
-No significant issues at the expected scale (< 1000 GTINs). Validation is O(n), hierarchy analysis uses dict lookups, duplicate detection uses Counter. Session state caching works correctly within a session.
-
-The duplicate detail lookup (`gtin_core.py:411-414`) is O(n) per duplicate item (O(n²) worst case), but negligible at expected scale.
+**#9 — No keyboard focus indicators**
+`frontend/src/styles/global.css` — No `:focus-visible` styles defined for buttons, links, or interactive elements. Keyboard navigation users see no focus ring. Minor for a prospect demo but matters for professional polish.
 
 #### Security
 
-**#5 — Unmerged security review branch**
-`origin/claude/security-code-audit-6k0Fg` contains: CI workflow, 30 additional tests, a robustness pass, and refactoring. This work was done but never merged. Status and quality are unknown — should be evaluated and either merged or discarded.
+**#3 — Stack traces in error responses (CRITICAL for demo)**
+`backend/routes/validate.py:101-102`:
+```python
+except Exception as exc:
+    raise HTTPException(400, f"Error reading file: {exc}") from exc
+```
+If file parsing fails, the raw Python exception (including library names, internal paths, and error details) is sent to the client and displayed in the UI error banner. A prospect uploading a malformed file sees internal implementation details. Should show a friendly message and log the full error server-side.
 
-**#9 — No input size guard on paste**
-`app.py:180-194` — The paste text area accepts unlimited input. A user (or bot) pasting 100K GTINs could cause a long hang or memory issue in the Streamlit session. A simple cap (e.g., 10,000 lines with a warning) would prevent this.
+**#6 — Unsanitized company_name in filenames**
+`backend/routes/reports.py:18,33,48` — `company_name.replace(' ', '_')` only replaces spaces. Characters like `"`, `\n`, `../`, or other specials pass through to the Content-Disposition header. While not exploitable in practice (browsers sanitize filenames), it's a code quality issue visible to anyone reviewing the repo.
 
-`unsafe_allow_html=True` usage is safe — all rendered HTML uses either hardcoded strings or values from the validation engine (not raw user input). No XSS risk found.
+#### Performance
 
-No secrets in the codebase. No server-side file operations beyond Streamlit's upload handler.
+**#8 — Sync validation blocks async handler**
+`backend/routes/validate.py:80` — `validate_upload` is declared `async def` but calls synchronous `_run_validation()` directly at line 112. This blocks the event loop during CPU-heavy validation. FastAPI runs sync `def` handlers in a threadpool automatically, but `async def` handlers run on the event loop. At demo scale (1-2 users) this doesn't matter, but it's an architectural issue for production.
 
-#### UX
+Note: `validate_text` (line 72) is correctly declared as sync `def`, so FastAPI runs it in a threadpool. Only the upload endpoint has this issue.
 
-**#5 — Sidebar collapsed by default**
-`app.py:28` — `initial_sidebar_state="collapsed"`. The company name input (needed for branded PDF) and retailer filter are hidden until users discover the sidebar. For first-time users, these features are invisible.
+#### Code Quality
 
-Options: expand sidebar by default, move company name to the main flow (before results), or add a prompt to open sidebar when results appear.
+**#11 — Cache race conditions (minor at demo scale)**
+`backend/cache.py` — Global `_store` dict is mutated without locks. `_evict()` iterates the dict while other requests could be modifying it. At demo scale with 1-2 concurrent users, collision is extremely unlikely. For production use, would need `threading.Lock`.
 
-Custom HTML components (score card, stat cards, retailer cards) lack ARIA roles and labels — not accessible to screen readers. Minor for current audience but matters for professional polish.
+#### Tests
+
+**#12 — No frontend tests**
+83 backend tests provide good coverage of core logic and API. Zero frontend tests exist — no React component tests, no integration tests, no E2E tests. The DownloadButton silent-failure bug (#2) would have been caught by a basic component test. However, adding frontend tests is high effort relative to the demo timeline.
+
+#### Architecture
+
+No significant issues. Clean separation between core logic, backend routes, and frontend. FastAPI serves as a thin HTTP layer with no business logic. React state management via `useReducer` is appropriate for the complexity. CSS Modules prevent style leakage.
+
+#### Documentation
+
+README is accurate and well-written for the current stack. CI badge works. Live URL is correct. Dev setup instructions work (though `pytest-anyio` is used by API tests but not listed in dev dependencies — would cause test failures for someone cloning the repo and running `pytest tests_api.py`).
 
 #### DevEx
 
-**#2 — No CI/CD**
-No GitHub Actions workflow. Tests don't run on push. For a portfolio piece, a green CI badge in the README signals engineering discipline. The unmerged security branch actually contains a CI workflow — may be usable.
-
-**#8 — No linting or type checking**
-No ruff, black, mypy, or similar configured in pyproject.toml. Code style is manually consistent but not enforced. Adding tool configs would take minutes and catch issues automatically.
-
-Dev setup is otherwise excellent: 3 deps, `streamlit run app.py`, tests in < 1 second.
+CI pipeline is comprehensive (6 parallel jobs, ~3-4 min runtime). Local dev requires two terminals (backend + frontend) but this is standard for the stack. Docker build is well-optimized with multi-stage build.
 
 ### Summary
 
-The project is solid at its core — the validation engine is well-structured, tests pass, and the app delivers on its promise. The highest-leverage finding is the **UPC-A severity bug** (#1), which makes the readiness score misleading for the primary audience. The second cluster of wins is **engineering discipline signals** (#2, #3, #8) — CI, linting, and merging prior work — which matter specifically because this is a portfolio piece. The third cluster is **completeness** (#7, #4) — report tests and project docs that round out the professional impression.
+The codebase is architecturally sound and the core features work well. The issues are **surface-level polish**, not structural problems. The three critical findings (#1 page title, #2 download errors, #3 stack traces) are all quick fixes that would be immediately visible during a prospect demo. Fix those plus the empty-paste feedback (#4) and the tool will present professionally.
 
 ---
 
 ## Phase 3: Landscape Scan
-**Date:** 2026-05-15
-**Category:** GTIN/UPC validation tools & product data quality platforms for CPG brands
+**Date:** 2026-05-16
+**Category:** GTIN/UPC validation tools & product data quality diagnostics for CPG brands
+**Note:** Competitor set carried forward from prior audit (May 15). Positioning updated to reflect FastAPI + React migration.
 
 ### Competitors / Similar Projects
 
@@ -214,129 +185,122 @@ The project is solid at its core — the validation engine is well-structured, t
 | Check digit validation | ✅ | ✅ | ❌ (registry only) | ✅ | ❌ | ✅ |
 | Batch validation | ✅ | ✅ | 🟡 (API, enterprise) | ✅ (CLI) | ✅ | ✅ |
 | Format detection (8/12/13/14) | ✅ | ✅ | ➖ | ✅ | ➖ | ✅ |
+| File upload (CSV/Excel) | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
 | Retailer-specific checklists | ✅ | ❌ | ❌ | ❌ | ✅ | 🟡 |
 | Readiness scoring (0-100) | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
 | Packaging hierarchy analysis | ✅ | ❌ | ❌ | ❌ | 🟡 | ✅ |
 | Cost-of-inaction estimates | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Branded PDF report | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | CSV export | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Corrected GTIN download | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
 | Duplicate detection | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
 | Company prefix analysis | ✅ | ❌ | ✅ (authoritative) | ✅ | ❌ | ✅ |
-| Before/after corrections | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
 | GTIN-14 case generator | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Data completeness analysis | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Executive summary (plain English) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Executive summary | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Prioritized fix roadmap | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| REST API | ✅ (new) | ❌ | ✅ (enterprise) | ✅ | ✅ | ✅ |
+| Modern SPA frontend | ✅ (new) | 🟡 (basic) | ✅ | ❌ (CLI) | ✅ | ✅ |
 | GS1 registry lookup | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ |
 | Retailer data syndication | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| API access | ❌ | ❌ | ✅ (enterprise) | ✅ | ✅ | ✅ |
-| Free / no sales call | ✅ | ✅ | 🟡 (basic free) | ✅ | ❌ | ❌ |
+| Free / no login | ✅ | ✅ | 🟡 (basic free) | ✅ | ❌ | ❌ |
 | Product attribute management | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
 
 ### Landscape Position
 
 #### Table Stakes (standard in category)
-These are baseline features every tool in this space has. This project has all of them:
-- Check digit validation (GS1 mod-10)
-- Format detection (GTIN-8, -12, -13, -14)
-- Batch input (CSV or paste)
-- Before/after corrections
+All present — check digit validation, format detection, batch input, before/after corrections. No gaps at the baseline level.
 
-#### Where This Project Is Stronger
-1. **Retailer-specific checklists** — Only enterprise platforms (Salsify, Syndigo) offer retailer-specific validation rules. This project delivers it for free with no login.
-2. **Readiness scoring** — The 0-100 score with letter grade mirrors enterprise patterns (Salsify's Content Readiness Scorecards) but is accessible to small brands without a PIM contract.
-3. **Cost-of-inaction framing** — No competitor does this. The financial impact estimates translate data quality issues into business language that operations managers and COOs understand.
-4. **Branded PDF report** — No free tool and no enterprise platform produces a downloadable, company-branded diagnostic report designed for handoff to non-technical stakeholders.
-5. **Executive summary** — Plain-English, copy-pasteable summary for emails/Slack. Unique.
-6. **GTIN-14 case generator** — Calculates what case GTINs a brand needs. No competitor offers this.
-7. **Fix prioritization** — Ranked by impact × effort with time estimates. No free tool does this.
+#### Where This Project Is Stronger (vs. prior audit)
+The FastAPI + React migration closed two gaps from the prior landscape scan:
+
+1. **REST API** — Previously listed as a weakness ("No API"). Now has 9 documented endpoints. While not positioned as a public API, the architecture supports it. Matches enterprise platforms; exceeds all free tools.
+2. **Modern SPA frontend** — Streamlit's constrained UI is gone. React 19 SPA with responsive layout, scroll-spy navigation, and CSS Modules. Professional-grade frontend that matches enterprise platforms' UX quality.
+3. **Docker deployment** — Portable, reproducible deployment. Matches enterprise infrastructure patterns; exceeds free tools that rely on client-side JS or hosted scripts.
+
+Unchanged strengths from prior audit:
+4. **Retailer-specific checklists** — Only enterprise platforms (Salsify, Syndigo) match this. Free for this tool vs. $1,500+/mo for Salsify.
+5. **Cost-of-inaction estimates** — Still unique across all competitors at any price tier.
+6. **Branded PDF report** — Still unique. No competitor produces a downloadable, company-branded diagnostic.
+7. **Executive summary + fix roadmap** — Still unique. Plain-English summary + prioritized action plan.
+8. **GTIN-14 case generator** — Still unique.
 
 #### Where This Project Is Weaker
-1. **No GS1 registry lookup** — Cannot verify GTIN ownership or prefix assignment against GS1's authoritative database. GS1 Verified and 1WorldSync can.
-2. **No API** — Programmatic access would allow integration into existing workflows. The `gtin` PyPI package and enterprise platforms offer APIs.
-3. **No data syndication** — Enterprise platforms (Salsify, 1WorldSync) push validated data directly to retailers. This tool diagnoses but doesn't fix the last mile.
-4. **No product attribute management** — Only validates GTINs and checks column completeness. Enterprise PIMs manage the full product data lifecycle.
+1. **No GS1 registry lookup** — Cannot verify GTIN ownership. GS1 Verified and 1WorldSync can. (Unchanged — intentional scope boundary.)
+2. **No data syndication** — Cannot push validated data to retailers. Enterprise platforms own this. (Unchanged — different product category.)
+3. **No product attribute management** — Only validates GTINs and checks column completeness. (Unchanged — by design.)
+4. **Free tier hosting** — Render free tier has cold starts (30+ second delay) and limited resources. Enterprise competitors have instant responses. (New concern for demo.)
 
-#### Unique Differentiators (things nobody else does)
-1. **Cost-of-inaction estimates** — Translating data quality into dollar impact
-2. **Branded PDF diagnostic report** — Professional handoff document
-3. **Executive summary generation** — Copy-paste ready business communication
-4. **GTIN-14 case GTIN generator** — Calculates needed case GTINs with correct check digits
-5. **Prioritized fix roadmap** with effort/impact/time estimates
-6. **Free, instant, no-login** access to features that otherwise require enterprise PIM contracts
+#### Unique Differentiators
+Unchanged from prior audit — the migration didn't add or remove unique features, but the improved frontend presentation makes them more compelling to prospects:
+1. Cost-of-inaction estimates (dollar impact framing)
+2. Branded PDF diagnostic report
+3. Executive summary generation
+4. GTIN-14 case GTIN generator
+5. Prioritized fix roadmap with effort/impact/time estimates
+6. Free, instant, no-login access to enterprise-grade features
 
 #### Category Trends
-- **Enterprise consolidation**: Syndigo acquired 1WorldSync (2024). The enterprise tier is consolidating.
-- **Retailer-specific validation** is becoming standard at the enterprise level (Salsify + Walmart Content Spec 3.0 integration).
-- **The mid-market gap persists**: Specialty food brands at $10M-$100M revenue are too small for Salsify ($1,500+/mo) but too complex for free check-digit calculators. This is the exact gap this tool fills.
-- **"Readiness scoring" as a UX pattern** is converging across the category — Salsify and Akeneo independently arrived at similar patterns. This tool's implementation validates the approach.
+- **Enterprise consolidation** continues (Syndigo + 1WorldSync merger).
+- **"Readiness scoring" as UX pattern** converging across the category (Salsify, Akeneo).
+- **The mid-market gap persists**: $10M–$100M specialty food brands are too small for Salsify ($1,500+/mo) but need more than check-digit calculators. This is still the exact gap this tool fills.
+- **API-first architectures** are now standard at the enterprise tier. With the FastAPI migration, this project now matches that pattern — a positioning upgrade from the Streamlit version.
 
 ### Summary
 
-This project occupies a genuine white space: **the diagnostic layer between free check-digit calculators and enterprise PIM platforms.** Free tools validate check digits. Enterprise platforms manage and syndicate data. Nobody provides a free, instant, brand-friendly diagnostic that tells a $25M specialty food company "here's your readiness score, here's what it's costing you, here's the fix plan, here's a PDF for your COO." The feature set independently mirrors enterprise patterns (Salsify's readiness scorecards) while adding unique capabilities (cost-of-inaction, branded reports, fix roadmaps) that no competitor at any price tier offers.
+The migration from Streamlit to FastAPI + React **closed the two most visible gaps** from the prior landscape scan (no API, limited UI). The project now has architectural parity with enterprise platforms while maintaining its key advantage: free, instant, no-login access to features that otherwise require $1,500+/mo PIM contracts. The unique differentiators (cost-of-inaction, branded PDF, executive summary, fix roadmap) remain unmatched at any price tier. The remaining weaknesses (no GS1 registry, no syndication, no PIM) are intentional scope boundaries, not gaps to close.
 
 ---
 
-## Phase 4: Differentiation & Next Moves
-**Date:** 2026-05-15
+## Phase 4: Synthesis & Next Moves
+**Date:** 2026-05-16
+**Lens:** What to fix before showing this to a prospect
 
 ### Cross-Reference Summary
 
-The internal review (Phase 2) and landscape scan (Phase 3) tell a clear story: **the tool's competitive positioning is strong, but its credibility signals are weak.** The feature set genuinely fills a white space between free check-digit calculators and $1,500/mo enterprise PIMs. But the #1 differentiator — the readiness score — is actively undermined by the UPC-A severity bug, which makes every valid US barcode look problematic. For a tool whose entire value prop is "trust this score," that's the most damaging issue in the codebase.
+The feature set is strong and the competitive position is genuine — this tool fills a real gap between free check-digit calculators and $1,500/mo enterprise PIMs. The internal issues from Phase 2 don't threaten the feature set; they threaten the **credibility of the person demoing it**. A prospect who opens the tool and sees "frontend" in the browser tab, encounters a silent download failure, or sees a Python stack trace will question the polish of everything else — including the features that are actually unique and well-built.
 
-The second theme is **portfolio credibility at the code level.** A prospect evaluating consulting capabilities will look at the GitHub repo. No CI, no type checking, an unmerged branch with stale work, and an untyped central data structure all send signals that contradict the professional polish of the app itself. These are cheap to fix and disproportionately valuable for the portfolio use case.
+The strategic frame is simple: **the unique differentiators are already built. The work is protecting them during the demo.** The branded PDF (unique, no competitor has it) breaks if downloads fail silently. The executive summary (unique) loses impact if the page title says "frontend" when the prospect screenshots it. The cost-of-inaction estimates (unique) won't matter if the prospect can't get past a 30-second cold start.
 
-The third theme is **protecting existing differentiators.** The branded PDF report, cost-of-inaction estimates, and executive summary are features nobody else offers at any price tier. But the PDF generator has no tests (crash at download = broken differentiator), the company name input is hidden (branded PDF goes unbranded), and duplicated rendering logic makes maintenance fragile. Strengthening what's already unique has more ROI than chasing features competitors own (GS1 lookup, syndication, PIM).
+Every move below maps to a specific moment in the prospect's experience: open the URL, try it, review results, download reports, share with their team.
 
 ### Ranked Next Moves
 
 | # | Move | Category | Strategic | Internal | Effort | Score | Description |
 |---|------|----------|-----------|----------|--------|-------|-------------|
-| 1 | Fix readiness score accuracy | Double down | 5 | 5 | 1 | 10.0 | Downgrade UPC_NOT_GTIN13 from WARNING to INFO — a dataset of valid UPCs should not score a C |
-| 2 | Add CI/CD with green README badge | Foundational | 4 | 4 | 1 | 8.0 | GitHub Actions: pytest matrix, pip-audit. Green badge in README signals engineering discipline |
-| 3 | Evaluate & merge security branch | Foundational | 2 | 5 | 1 | 7.0 | Branch has CI workflow, 30 tests, and refactoring. Cherry-pick what's good, discard the rest |
-| 4 | Add linting + type checking config | Foundational | 3 | 3 | 1 | 6.0 | Add ruff + mypy to pyproject.toml. Enforces consistency, catches bugs, portfolio signal |
-| 5 | Surface company name in main flow | Double down | 3 | 3 | 1 | 6.0 | Move company name input from hidden sidebar to main flow. Branded PDF is a unique differentiator — don't hide the input it needs |
-| 6 | Add project CLAUDE.md | Foundational | 1 | 4 | 1 | 5.0 | Stack, conventions, key files, current focus. Saves 5-10 min per future session |
-| 7 | Add report generator tests | Double down | 3 | 4 | 2 | 3.5 | Smoke tests for PDF and CSV generation. The branded PDF is a differentiator — if it crashes, the differentiator breaks |
-| 8 | TypedDict for validate_batch | Double down | 3 | 4 | 2 | 3.5 | Replace untyped dict with TypedDict. Self-documenting, type-safe, shows Python fluency to portfolio reviewers |
-| 9 | Add input size guard | Foundational | 1 | 2 | 1 | 3.0 | Cap paste input at 10K lines with warning. Prevents session crashes |
-| 10 | Deduplicate pdf_report rendering | Foundational | 1 | 3 | 2 | 2.0 | Consolidate two near-identical rendering functions. Cleaner code for portfolio |
-| 11 | Fix dead code (pdf_report:125) | Foundational | 0 | 1 | 1 | 1.0 | Remove redundant string reassignment. Trivial but visible to code reviewers |
+| 1 | Fix download error handling | Double down | 4 | 5 | 1 | 9.0 | Branded PDF is a unique differentiator — silent failures break it mid-demo |
+| 2 | Fix page title + add meta/OG tags | Foundational | 4 | 4 | 1 | 8.0 | Browser tab, link previews when prospect shares URL with their team |
+| 3 | Sanitize error messages | Foundational | 3 | 4 | 1 | 7.0 | Prospect uploads messy file → sees Python internals → credibility gone |
+| 4 | Add empty-paste feedback | Foundational | 2 | 3 | 1 | 5.0 | Clicking "Validate" with nothing looks broken. Simple guard. |
+| 5 | Warm Render before demo | Operational | 5 | 0 | 1 | 5.0 | Hit the URL 2 min before the call. Free tier cold start is 30+ seconds. |
+| 6 | Sanitize company_name in filenames | Foundational | 1 | 3 | 1 | 4.0 | Special chars in Content-Disposition. Minor but visible to repo reviewers. |
+| 7 | Fix async/sync in validate_upload | Foundational | 1 | 3 | 1 | 4.0 | Change `async def` to `def` so FastAPI threads it properly. One-word fix. |
+| 8 | Add API timeout + friendly message | Foundational | 3 | 3 | 2 | 3.0 | If Render is slow, show "taking longer than expected" not infinite spinner |
 
 ### Recommended Sequence
 
-**Sprint 1 — Fix what's broken (1-2 hours)**
-1. Fix readiness score (UPC-A → INFO severity)
-2. Fix dead code in pdf_report.py
-3. Add input size guard on paste
-4. Add project CLAUDE.md
+**Before the demo call (~1-2 hours total):**
 
-These are quick wins that fix the most damaging issue (#1) and clean up obvious rough edges. All are effort-1.
+1. **Page title + meta tags** (#2) — 10 min. Fix `<title>`, add description, OG tags. Instant credibility upgrade.
+2. **Download error handling** (#1) — 15 min. Add error state to DownloadButton, show message on failure.
+3. **Error message sanitization** (#3) — 5 min. Replace `f"Error reading file: {exc}"` with a friendly message.
+4. **Empty paste feedback** (#4) — 5 min. Show a message when textarea is empty and user clicks Validate.
+5. **company_name sanitization** (#6) — 5 min. Strip special chars from filename.
+6. **Async fix** (#7) — 1 min. Change `async def validate_upload` to `def validate_upload`.
+7. **API timeout** (#8) — 15 min. Add AbortController with 30s timeout and friendly fallback message.
 
-**Sprint 2 — Engineering foundation (2-3 hours)**
-5. Evaluate the security branch — cherry-pick CI workflow + tests if they're solid
-6. Set up CI/CD with green badge in README
-7. Add ruff + mypy config to pyproject.toml
+**Day of the demo (operational):**
 
-These establish the engineering discipline signals that matter for the portfolio use case. The security branch may already have a CI workflow ready to use.
-
-**Sprint 3 — Strengthen differentiators (3-4 hours)**
-8. Surface company name input in main flow
-9. Add report generator smoke tests
-10. TypedDict for validate_batch return value
-11. Deduplicate pdf_report rendering logic
-
-These protect and extend the features that make this tool unique. The branded PDF, readiness scoring, and code quality all get stronger.
+8. **Warm Render** (#5) — Hit the live URL 2 minutes before the call. Refresh once to confirm it's responsive.
 
 ### What NOT to Do
 
-**Don't add GS1 registry lookup.** Tempting because it's the #1 gap vs. GS1 Verified, but it requires paid API access, adds an external dependency, and moves the tool from "instant diagnostic" to "data enrichment." The simplicity of "paste GTINs, get results, no API key needed" is a competitive advantage, not a limitation.
+**Don't add frontend tests before the demo.** They'd catch bugs like #1 and #2, but writing them takes 4+ hours and doesn't improve the prospect's experience. Fix the bugs directly instead. Add tests after the demo.
 
-**Don't add an API.** This is a portfolio piece and consulting tool, not a SaaS product. An API adds auth, rate limiting, hosting costs, and documentation overhead. If it ever becomes a product, API comes after product-market fit, not before.
+**Don't upgrade Render to a paid plan yet.** The cold start is manageable by warming it up before the call. A paid plan ($7/mo) makes sense after you've validated the prospect is interested, not before.
 
-**Don't add data syndication or PIM features.** This is scope creep into a domain owned by billion-dollar platforms (Salsify, Syndigo). Stay in the diagnostic lane — "we tell you what's wrong" is a clear, defensible position. "We also fix it and push it to retailers" is a multi-year enterprise play.
+**Don't add GS1 registry lookup.** It's the biggest feature gap vs. enterprise platforms, but it requires paid API access and moves you out of the "instant, free diagnostic" lane. If the prospect asks about it, frame it as a future capability: "We can add registry verification for clients who need it."
 
-**Don't add ARIA accessibility yet.** Effort-3 for minor impact on the actual user base. None of the competitors in this space have it either. File it for later if the tool gets real traction beyond the consulting use case.
+**Don't refactor the cache or add thread safety.** The in-memory cache works fine at demo scale. Production hardening comes after product-market fit.
 
-**Don't build architecture docs.** At 3,400 LOC with clean file separation, the code is its own documentation. A prospect who can evaluate Python code doesn't need a separate architecture guide. The README already covers project structure.
+**Don't add accessibility (ARIA, focus indicators) before the demo.** Important for professional polish long-term, but the prospect won't notice during a live walkthrough. No competitor in this category has it either.

@@ -16,22 +16,33 @@ function DownloadButton({
   onClick: () => Promise<void>
 }) {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   return (
-    <button
-      className="btn btn-primary btn-full"
-      disabled={loading}
-      onClick={async () => {
-        setLoading(true)
-        try {
-          await onClick()
-        } finally {
-          setLoading(false)
-        }
-      }}
-    >
-      {loading ? <span className="spinner" /> : null}
-      {label}
-    </button>
+    <>
+      <button
+        className="btn btn-primary btn-full"
+        disabled={loading}
+        onClick={async () => {
+          setError('')
+          setLoading(true)
+          try {
+            await onClick()
+          } catch (e) {
+            setError(
+              e instanceof Error && e.name === 'AbortError'
+                ? 'Request timed out. Try again in a moment.'
+                : 'Download failed. Please try again.',
+            )
+          } finally {
+            setLoading(false)
+          }
+        }}
+      >
+        {loading ? <span className="spinner" /> : null}
+        {label}
+      </button>
+      {error && <p className="text-error" style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>{error}</p>}
+    </>
   )
 }
 
