@@ -141,6 +141,8 @@ td {
   color: #721c24;
 }
 
+.text-error { color: var(--color-error); }
+
 .spinner {
   display: inline-block;
   width: 20px;

@@ -1,8 +1,148 @@
-# GTIN Validator — Improvement Plan
+# GTIN Validator — Prospect-Readiness Plan
 
-**Source:** Full project audit (2026-05-15)
+**Source:** Full project audit v2 (2026-05-16)
 **Tier:** Medium
-**Status:** Complete — all 10 goals shipped (2026-05-15)
+**Status:** In progress
+**Prior plan:** Complete — all 10 goals from v1 audit shipped (2026-05-15)
+
+---
+
+## Decomposition: All Prospect Demo Fixes
+
+All 7 goals are independent — no dependencies between them. Grouped into two batches by file location for efficient execution.
+
+### Batch A — Frontend fixes (Goals 1, 2, 4, 7)
+
+- [ ] 1.1: Fix page title in `frontend/index.html` — change `<title>frontend</title>` to `<title>GTIN Product Data Validator</title>`
+    - Depends on: none
+    - Done when: browser tab shows "GTIN Product Data Validator"
+- [ ] 1.2: Add meta description + OG tags to `frontend/index.html`
+    - Depends on: 1.1
+    - Done when: `<meta name="description">`, `og:title`, `og:description`, `og:type` all present
+- [ ] 2.1: Add error state to `DownloadButton` in `frontend/src/components/DownloadReports.tsx` — catch errors in onClick, display message below button
+    - Depends on: none
+    - Done when: simulating a failed download (e.g. expired token) shows an error message instead of silent failure
+- [ ] 4.1: Add empty-paste guard in `frontend/src/components/InputSection.tsx` — show inline message when user clicks Validate with empty textarea
+    - Depends on: none
+    - Done when: clicking "Validate GTINs" with empty text shows "Paste some GTINs first" (or similar); message clears on typing
+- [ ] 7.1: Add AbortController with 30s timeout to `request()` in `frontend/src/api.ts`
+    - Depends on: none
+    - Done when: `request()` aborts after 30s and throws an error with a user-friendly message
+- [ ] 7.2: Add timeout to `downloadBlob()` in `frontend/src/api.ts`
+    - Depends on: none
+    - Done when: download calls also abort after 30s with friendly message
+- [ ] A.verify: Build frontend — `cd frontend && npm run build`
+    - Depends on: 1.1, 1.2, 2.1, 4.1, 7.1, 7.2
+    - Done when: build succeeds with no TypeScript errors
+
+### Batch B — Backend fixes (Goals 3, 5, 6)
+
+- [ ] 3.1: Sanitize error message in `backend/routes/validate.py:101-102` — replace `f"Error reading file: {exc}"` with generic message, log the real error
+    - Depends on: none
+    - Done when: uploading a malformed file returns "Could not read file. Please check the format." (not Python internals)
+- [ ] 5.1: Add filename sanitization helper in `backend/routes/reports.py` — strip everything except alphanumeric, hyphens, underscores from company_name
+    - Depends on: none
+    - Done when: `company_name="Café & Co."` produces filename `Caf_Co_report.csv`, not `Café_&_Co._report.csv`
+- [ ] 6.1: Change `async def validate_upload` to `def validate_upload` in `backend/routes/validate.py` — replace `await file.read()` with `file.file.read()`
+    - Depends on: none
+    - Done when: endpoint still works, `pytest tests_api.py -v` passes
+- [ ] B.verify: Run all backend tests — `pytest tests.py tests_api.py -v`
+    - Depends on: 3.1, 5.1, 6.1
+    - Done when: all 83 tests pass
+
+### Final verification
+- [ ] F.1: Run full CI checks locally — tests, lint, typecheck, frontend build
+    - Depends on: A.verify, B.verify
+    - Done when: all pass clean
+
+---
+
+## Prospect Demo Fixes (from Audit v2, Phase 4)
+
+### Goal 1: Fix page title + add meta/OG tags
+**Source:** Audit Phase 4, Move #2
+**Category:** Foundational
+**Priority:** 1
+
+**Objective:** Replace Vite default `<title>frontend</title>` with proper title, add meta description and OpenGraph tags for professional link sharing.
+
+**Success Criteria:**
+- Browser tab says "GTIN Product Data Validator"
+- Sharing URL in Slack/email shows title, description, and (optionally) preview image
+- `frontend/index.html` has `<meta name="description">`, `og:title`, `og:description`
+
+### Goal 2: Fix download error handling
+**Source:** Audit Phase 4, Move #1
+**Category:** Double down (protects unique differentiator)
+**Priority:** 2
+
+**Objective:** DownloadButton shows an error message when download fails instead of silently swallowing it.
+
+**Success Criteria:**
+- Failed download shows user-friendly error (e.g., "Download failed. Try again.")
+- Loading spinner stops on error (already works)
+- Error clears when user retries
+
+**Context:** Branded PDF is a unique differentiator — no competitor offers it. Silent failures break this during a demo.
+
+### Goal 3: Sanitize error messages
+**Source:** Audit Phase 4, Move #3
+**Category:** Foundational
+**Priority:** 3
+
+**Objective:** Replace raw exception messages in API responses with user-friendly text. Log full errors server-side.
+
+**Success Criteria:**
+- `backend/routes/validate.py:101-102` no longer exposes `{exc}` to client
+- Error message says something like "Could not read file. Please check the format."
+- Full exception still logged for debugging
+
+### Goal 4: Add empty-paste feedback
+**Source:** Audit Phase 4, Move #4
+**Category:** Foundational
+**Priority:** 4
+
+**Objective:** Show feedback when user clicks "Validate GTINs" with empty textarea.
+
+**Success Criteria:**
+- Empty paste + click shows a message like "Paste some GTINs first"
+- Message clears when user starts typing
+
+### Goal 5: Sanitize company_name in filenames
+**Source:** Audit Phase 4, Move #6
+**Category:** Foundational
+**Priority:** 5
+
+**Objective:** Strip special characters from company_name before using it in Content-Disposition filename.
+
+**Success Criteria:**
+- Only alphanumeric, hyphens, underscores in filenames
+- company_name with special chars produces clean filename
+- Empty company_name still falls back to "gtin_report"
+
+### Goal 6: Fix async/sync in validate_upload
+**Source:** Audit Phase 4, Move #7
+**Category:** Foundational
+**Priority:** 6
+
+**Objective:** Change `async def validate_upload` to `def validate_upload` so FastAPI runs it in a threadpool instead of blocking the event loop.
+
+**Success Criteria:**
+- Endpoint works identically (same inputs/outputs)
+- `file.read()` call updated from `await file.read()` to sync equivalent
+- All API tests pass
+
+### Goal 7: Add API timeout with friendly message
+**Source:** Audit Phase 4, Move #8
+**Category:** Foundational
+**Priority:** 7
+
+**Objective:** Add AbortController with 30-second timeout to frontend fetch calls. Show friendly message instead of infinite spinner.
+
+**Success Criteria:**
+- API calls abort after 30 seconds
+- User sees "Request timed out — the server may be starting up. Try again in a moment." instead of infinite spinner
+- Normal requests unaffected
 
 ---
 

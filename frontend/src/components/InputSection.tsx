@@ -54,13 +54,19 @@ export default function InputSection({ state, dispatch }: Props) {
     [handleFile],
   )
 
+  const [pasteError, setPasteError] = useState('')
+
   const handlePaste = useCallback(async () => {
     const lines = pasteText
       .trim()
       .split('\n')
       .map((l) => l.trim())
       .filter(Boolean)
-    if (!lines.length) return
+    if (!lines.length) {
+      setPasteError('Paste some GTINs first — one per line.')
+      return
+    }
+    setPasteError('')
     dispatch({ type: 'VALIDATION_START' })
     try {
       const data = await api.validateGtins(lines.slice(0, 10_000))
@@ -134,9 +140,13 @@ export default function InputSection({ state, dispatch }: Props) {
             <summary>Or paste GTINs manually</summary>
             <textarea
               value={pasteText}
-              onChange={(e) => setPasteText(e.target.value)}
+              onChange={(e) => {
+                setPasteText(e.target.value)
+                if (pasteError) setPasteError('')
+              }}
               placeholder={'614141000012\n614141000029\n614141000036\n...'}
             />
+            {pasteError && <p className="text-error" style={{ margin: '0.25rem 0' }}>{pasteError}</p>}
             <button className="btn btn-primary" onClick={handlePaste}>
               Validate GTINs
             </button>
