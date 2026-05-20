@@ -106,7 +106,7 @@
 }
 
 .sampleBanner {
-  background: #fff3cd;
+  background: var(--color-warning-light);
   border: 1px solid var(--color-warning);
   border-radius: var(--radius-md);
   padding: 0.75rem var(--space-md);

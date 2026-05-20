@@ -1,23 +1,81 @@
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/playfair-display-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/playfair-display-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/source-sans-3-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/source-sans-3-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
-  --color-primary: #e94560;
-  --color-bg: #eaecee;
-  --color-bg-secondary: #e0e2e5;
-  --color-text: #1a1a2e;
-  --color-text-muted: #6c757d;
-  --color-text-subtitle: #4a4a5a;
-  --color-success: #28a745;
-  --color-warning: #ffc107;
-  --color-error: #dc3545;
-  --color-info: #17a2b8;
-  --color-card-bg: #f0f1f3;
-  --color-card-border: #d0d3d8;
-  --color-cost-text: #856404;
+  /* Canvas */
+  --color-canvas: #f5f3ee;
   --color-white: #ffffff;
 
-  --gradient-score: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  --gradient-cost: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+  /* Brand red — text and 1px rules only */
+  --color-accent: #cc100a;
+  --color-accent-light: #fce8e7;
 
-  --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Chicago (primary blue) */
+  --color-primary: #1f2e7a;
+  --color-primary-hover: #141e52;
+  --color-primary-light: #e8eaf4;
+  --color-primary-muted: #8e9ad0;
+
+  /* Semantic colors */
+  --color-success: #158f75;
+  --color-success-light: #e4f5f0;
+  --color-warning: #ee8a2a;
+  --color-warning-light: #fdeee0;
+  --color-error: #cc100a;
+  --color-error-light: #fce8e7;
+  --color-info: #1f2e7a;
+  --color-info-light: #e8eaf4;
+
+  /* London greyscale */
+  --color-bg: #f5f3ee;
+  --color-bg-secondary: #f2f2f2;
+  --color-text: #333333;
+  --color-text-muted: #595959;
+  --color-text-subtitle: #595959;
+  --color-ink: #0d0d0d;
+  --color-card-bg: #ffffff;
+  --color-card-border: #d9d9d9;
+  --color-divider: #e0e0e0;
+  --color-disabled: #b3b3b3;
+
+  /* Cost/score gradients — updated to Lailara palette */
+  --gradient-score: linear-gradient(135deg, #0d0d0d 0%, #1f2e7a 100%);
+  --gradient-cost: linear-gradient(135deg, #fdeee0 0%, #fbdabc 100%);
+  --color-cost-text: #a05a1a;
+
+  /* Typography */
+  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-family: 'Source Sans 3', 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.85rem;
   --font-size-base: 1rem;
@@ -28,16 +86,18 @@
   --font-size-score: 4rem;
   --font-size-stat: 2rem;
 
+  /* Spacing */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
   --space-lg: 1.5rem;
   --space-xl: 2rem;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* Border radius — 2px per design system */
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
 
-  --max-width: 1100px;
+  --max-width: 900px;
 }

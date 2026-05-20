@@ -8,9 +8,11 @@
 }
 
 .number {
+  font-family: var(--font-serif);
   font-size: var(--font-size-score);
   font-weight: 700;
   line-height: 1;
+  letter-spacing: -0.02em;
   margin-bottom: var(--space-xs);
 }
 

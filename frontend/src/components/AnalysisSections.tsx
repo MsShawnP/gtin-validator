@@ -11,10 +11,10 @@ import type {
 import styles from './AnalysisSections.module.css'
 
 function effortColor(v: string) {
-  return v === 'Low' ? '#28a745' : v === 'Medium' ? '#ffc107' : '#dc3545'
+  return v === 'Low' ? '#158f75' : v === 'Medium' ? '#ee8a2a' : '#cc100a'
 }
 function impactColor(v: string) {
-  return v === 'High' ? '#dc3545' : v === 'Medium' ? '#ffc107' : '#28a745'
+  return v === 'High' ? '#cc100a' : v === 'Medium' ? '#ee8a2a' : '#158f75'
 }
 
 // ---------------------------------------------------------------------------
@@ -455,7 +455,7 @@ export function CostOfInaction({ cost }: { cost: CostEstimate | null }) {
         </tbody>
       </table>
       {cost.growth_note && (
-        <p style={{ marginTop: '0.75rem', color: '#856404', fontWeight: 500 }}>
+        <p style={{ marginTop: '0.75rem', color: '#a05a1a', fontWeight: 500 }}>
           Growth multiplier: {cost.growth_note}
         </p>
       )}

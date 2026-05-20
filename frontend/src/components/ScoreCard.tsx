@@ -2,9 +2,9 @@ import type { ScoreResult } from '../types'
 import styles from './ScoreCard.module.css'
 
 function scoreColor(score: number): string {
-  if (score >= 75) return '#28a745'
-  if (score >= 50) return '#ffc107'
-  return '#dc3545'
+  if (score >= 75) return '#158f75'
+  if (score >= 50) return '#ee8a2a'
+  return '#cc100a'
 }
 
 export default function ScoreCard({ score }: { score: ScoreResult }) {

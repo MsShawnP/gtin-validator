@@ -51,7 +51,7 @@
 }
 
 .issueWarning {
-  color: #856404;
+  color: #a05a1a;
   font-weight: 600;
 }
 
@@ -66,11 +66,11 @@
 }
 
 .success {
-  background: #e8f5e9;
-  border: 1px solid #c3e6cb;
+  background: var(--color-success-light);
+  border: 1px solid #b5e4d8;
   border-radius: var(--radius-md);
   padding: var(--space-md);
-  color: #155724;
+  color: #063d32;
 }
 
 .retailerCard {
@@ -128,8 +128,8 @@
 }
 
 .summaryBox {
-  background: #e8f5e9;
-  border: 1px solid #c3e6cb;
+  background: var(--color-success-light);
+  border: 1px solid #b5e4d8;
   border-radius: var(--radius-md);
   padding: 1.25rem;
   white-space: pre-line;
