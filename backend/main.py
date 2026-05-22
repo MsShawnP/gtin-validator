@@ -3,17 +3,16 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
+from slowapi.middleware import SlowAPIMiddleware
+from starlette.middleware.base import RequestResponseEndpoint
+from starlette.responses import Response
 
+from backend.limiter import limiter
 from backend.routes import health, reports, sample, validate
 
 _is_production = os.getenv("ENVIRONMENT", "").lower() == "production"
-
-limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="GTIN Validator API",
@@ -23,12 +22,16 @@ app = FastAPI(
 )
 
 app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
 
 
 @app.exception_handler(RateLimitExceeded)
-async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
-    return JSONResponse(status_code=429, content={"detail": "Too many requests. Please try again shortly."})
-
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> Response:
+    return Response(
+        content='{"detail":"Too many requests. Please try again shortly."}',
+        status_code=429,
+        media_type="application/json",
+    )
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,7 +42,7 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def security_headers(request: Request, call_next):  # type: ignore[no-untyped-def]
+async def security_headers(request: Request, call_next: RequestResponseEndpoint) -> Response:
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"

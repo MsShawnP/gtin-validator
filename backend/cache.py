@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import time
 import uuid
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -47,7 +47,7 @@ def _evict() -> None:
 
 
 def store_result(
-    batch_result: Any, dataframe: Any = None
+    batch_result: BatchResult, dataframe: pd.DataFrame | None = None
 ) -> str:
     _evict()
     token = uuid.uuid4().hex
