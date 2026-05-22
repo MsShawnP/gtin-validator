@@ -31,6 +31,7 @@ FastAPI + React web app that validates GTINs against GS1 standards with retailer
 | `tests.py` | Core engine tests (50+) |
 | `tests_api.py` | API endpoint tests (20) |
 | `frontend/src/` | React SPA (components, api, types, reducer) |
+| `docs/solutions/` | Documented solutions to past problems, organized by category with YAML frontmatter |
 
 ## Conventions
 

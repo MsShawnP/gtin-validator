@@ -113,7 +113,7 @@ def validate_upload(
         raise HTTPException(400, "File is empty.")
 
     col = _detect_gtin_column(df, gtin_column)
-    gtins = [g for g in df[col].fillna("").astype(str).tolist() if g]
+    gtins = [g for g in df[col].fillna("").astype(str).tolist() if g.strip()]
     if not gtins:
         raise HTTPException(400, f"No GTINs found in column '{col}'.")
 

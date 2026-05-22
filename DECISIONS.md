@@ -1,5 +1,15 @@
 # Decisions Log
 
+## 2026-05-22: Use shared module pattern for cross-file framework singletons
+
+**Decision:** Any framework object that must be the same instance across modules (Limiter, metrics collectors, etc.) lives in its own module and is imported everywhere.
+
+**Why:** Creating separate instances of slowapi Limiter in different files caused rate limiting to silently fail. The decorators used an orphan instance disconnected from the app. slowapi gives zero feedback when misconfigured.
+
+**Scope:** `backend/limiter.py` is the canonical example. Apply the same pattern to any future cross-cutting concern that requires a single shared instance.
+
+**Do not:** Instantiate framework singletons locally in route files. If you see `Limiter(...)` in a routes file, it's wrong.
+
 ## 2026-05-22: Disable Swagger/ReDoc in production via ENVIRONMENT env var
 
 **Decision:** Conditionally disable `/api/docs` and `/api/redoc` when `ENVIRONMENT=production`.
