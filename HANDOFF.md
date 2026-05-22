@@ -1,11 +1,23 @@
 # Handoff
 
 ## Current State
-**Phase:** Prospect-demo polish complete, PR #12 open
-**Branch:** claude/stoic-davinci-5fb197 (1 commit ahead of main)
+**Phase:** Improvement pass complete — security hardening, bug fix, health tracker reconciled
+**Branch:** main
 **CI:** All checks pass locally (83 tests, ruff, mypy, frontend build)
 **Live URL:** https://gtin-validator.onrender.com
 **PR:** https://github.com/MsShawnP/gtin-validator/pull/12
+
+## 2026-05-22 — Improvement pass
+
+**Started from:** All planned work complete, PR #12 merged, deployed. No remaining tasks.
+
+**Did:** Full `/improve` pass with security + correctness reviews. Fixed file upload row number bug, added security headers + rate limiting + non-root Docker user, tightened CORS, conditional API docs, full UUID cache tokens, expanded .gitignore, created FAILURES.md, deleted 7 stale branches, reconciled health tracker across all project directories.
+
+**State:** 83 tests pass, ruff clean, mypy clean. New dep: slowapi. Health tracker now covers Active, Published, Reference, and Archived sections.
+
+**Next:** Run dep audit (pip-audit + npm audit) to fill tracker column. Consider /ce:code-review. No feature work planned.
+
+---
 
 ## 2026-05-16 — Audit v2 + Prospect-Readiness Fixes
 

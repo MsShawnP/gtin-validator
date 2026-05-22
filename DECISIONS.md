@@ -1,5 +1,25 @@
 # Decisions Log
 
+## 2026-05-22: Disable Swagger/ReDoc in production via ENVIRONMENT env var
+
+**Decision:** Conditionally disable `/api/docs` and `/api/redoc` when `ENVIRONMENT=production`.
+
+**Why:** API docs expose the full endpoint schema to anyone. Useful in dev, unnecessary risk in production.
+
+**Scope:** `backend/main.py` — `docs_url` and `redoc_url` set to `None` when `ENVIRONMENT=production`.
+
+**Do not:** Use a separate config file or settings module for this — a single env var check is sufficient for this project's scale.
+
+## 2026-05-22: Use slowapi for rate limiting at 10 req/min per IP
+
+**Decision:** Add slowapi rate limiting to the validate and upload endpoints at 10 requests/minute per IP address.
+
+**Why:** Validate and upload endpoints are CPU-intensive (parsing files, running validation on up to 10K GTINs). On Render free tier, unbounded requests could exhaust the instance.
+
+**Scope:** `/api/validate` and `/api/validate/upload` endpoints.
+
+**Do not:** Move rate limiting to nginx/reverse proxy level — Render free tier doesn't support custom nginx config.
+
 ## 2026-05-15: Migrate from Streamlit to FastAPI + React
 
 **Decision:** Replace the Streamlit UI entirely with a React 19 + TypeScript SPA backed by a FastAPI API. Core validation engine (`gtin_core.py`) stays unchanged.

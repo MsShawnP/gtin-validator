@@ -50,7 +50,7 @@ def store_result(
     batch_result: Any, dataframe: Any = None
 ) -> str:
     _evict()
-    token = uuid.uuid4().hex[:16]
+    token = uuid.uuid4().hex
     _store[token] = _CacheEntry(batch_result, dataframe)
     return token
 

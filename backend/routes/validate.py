@@ -4,7 +4,9 @@ from io import BytesIO
 from pathlib import Path
 
 import pandas as pd
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, HTTPException, Request, UploadFile
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from backend.cache import get_result, store_result
 from backend.schemas.requests import ValidateTextRequest
@@ -24,6 +26,7 @@ from gtin_core import (
     validate_batch,
 )
 
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter()
 
 GTIN_KEYWORDS = ["gtin", "upc", "ean", "barcode", "code", "item number", "sku"]
@@ -69,7 +72,8 @@ def _run_validation(gtins: list[str], df: pd.DataFrame | None = None) -> tuple[d
 
 
 @router.post("/validate", response_model=ValidationResponse)
-def validate_text(body: ValidateTextRequest) -> dict:
+@limiter.limit("10/minute")
+def validate_text(request: Request, body: ValidateTextRequest) -> dict:
     if not body.gtins:
         raise HTTPException(400, "No GTINs provided.")
     response_data, _ = _run_validation(body.gtins)
@@ -77,7 +81,9 @@ def validate_text(body: ValidateTextRequest) -> dict:
 
 
 @router.post("/validate/upload", response_model=ValidationResponse)
+@limiter.limit("10/minute")
 def validate_upload(
+    request: Request,
     file: UploadFile,
     gtin_column: str | None = None,
 ) -> dict:
@@ -105,7 +111,7 @@ def validate_upload(
         raise HTTPException(400, "File is empty.")
 
     col = _detect_gtin_column(df, gtin_column)
-    gtins = df[col].dropna().tolist()
+    gtins = df[col].fillna("").astype(str).tolist()
     if not gtins:
         raise HTTPException(400, f"No GTINs found in column '{col}'.")
 

@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 *.pyo
 .env
+.env.*
+*.key
+credentials.*
+node_modules/
