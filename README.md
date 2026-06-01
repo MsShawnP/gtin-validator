@@ -4,7 +4,7 @@
 
 A diagnostic tool for specialty food brands preparing product data for retailer submission. Validates GTINs against GS1 standards with retailer-specific context — built for operations teams, not developers.
 
-**[Try the live tool →](https://gtin-validator.onrender.com)**
+**[Try the live tool →](https://gtin.lailarallc.com)**
 
 ---
 
