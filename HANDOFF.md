@@ -4,7 +4,7 @@
 **Phase:** Fully maintained — code review, dep audit, compound docs all done
 **Branch:** main
 **CI:** All checks pass locally (83 tests, ruff, mypy, frontend build)
-**Live URL:** https://gtin-validator.onrender.com
+**Live URL:** https://gtin.lailarallc.com
 **PR:** https://github.com/MsShawnP/gtin-validator/pull/12
 
 ## 2026-05-22 — Code review fix + dep audit + compound

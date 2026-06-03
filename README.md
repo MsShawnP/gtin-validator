@@ -134,7 +134,7 @@ gtin-validator/
 
 - [GS1 General Specifications](https://www.gs1.org/standards/barcodes-epcrfid-id-keys/gs1-general-specifications)
 - [GS1 US GTIN Allocation Rules](https://www.gs1us.org)
-- [Walmart Item 360 Product Identifiers](https://itemmanager.helpdocs.io/article/6umpoiszgr-product-identifiers-new-catalog)
+- 1WorldSync product identifier documentation
 - [1WorldSync GDSN](https://1worldsync.com)
 
 ---
