@@ -122,7 +122,7 @@ gtin-validator/
 └── pyproject.toml
 ```
 
-## Technical notes
+## Stack
 
 - **Check digit algorithm**: GS1 standard mod-10 per [GS1 General Specifications §7.9](https://www.gs1.org/standards/barcodes-epcrfid-id-keys/gs1-general-specifications)
 - **GTIN-14 hierarchy detection**: Matches indicator digits 1–8 with corresponding unit GTINs by comparing the inner 12-digit item reference
@@ -146,3 +146,6 @@ MIT — see [LICENSE](LICENSE).
 ---
 
 *Built as a portfolio piece demonstrating product data consulting for specialty food brands. For a comprehensive Product Data Health Audit for your brand, [get in touch](mailto:msshawnp@gmail.com).*
+
+---
+Built by [Lailara LLC](https://lailarallc.com) — data hygiene and analytics consulting for specialty food brands scaling into national retail.
