@@ -29,8 +29,9 @@
 
 .card {
   background: var(--color-card-bg);
-  border: 1px solid var(--color-card-border);
-  border-radius: 10px;
+  border: none;
+  border-left: 4px solid var(--color-primary);
+  border-radius: 2px;
   padding: var(--space-md) 1.25rem;
   flex: 1;
   min-width: 200px;
