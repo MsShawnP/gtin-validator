@@ -91,6 +91,7 @@ gtin-validator/
 ├── backend/
 │   ├── main.py             # FastAPI app, CORS, static mount
 │   ├── cache.py            # In-memory result cache
+│   ├── limiter.py          # Rate limiting (slowapi)
 │   ├── serializers.py      # Dataclass → Pydantic conversion
 │   ├── routes/
 │   │   ├── validate.py     # Validation endpoints
@@ -148,4 +149,4 @@ MIT — see [LICENSE](LICENSE).
 *Built as a portfolio piece demonstrating product data consulting for specialty food brands. For a comprehensive Product Data Health Audit for your brand, [get in touch](mailto:msshawnp@gmail.com).*
 
 ---
-Built by [Lailara LLC](https://lailarallc.com) — data hygiene and analytics consulting for specialty food brands scaling into national retail.
+Built by [Lailara LLC](https://lailarallc.com) — data hygiene and analytics consu
