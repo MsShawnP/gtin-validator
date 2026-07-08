@@ -53,6 +53,8 @@
   --color-warning-light: #fdeee0;
   --color-error: #cc100a;
   --color-error-light: #fce8e7;
+  /* Tokyo-40 berry — severity FILL (badges). Red #cc100a stays ink-only. */
+  --color-critical-fill: #b82d4a;
   --color-info: #1f2e7a;
   --color-info-light: #e8eaf4;
 

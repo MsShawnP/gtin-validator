@@ -21,7 +21,8 @@
 .dropzone:hover,
 .dropzone.dragOver {
   border-color: var(--color-primary);
-  background: rgba(233, 69, 96, 0.04);
+  /* Chicago-20 tint to match the hover border (was off-palette #e94560). */
+  background: rgba(31, 46, 122, 0.04);
 }
 
 .dropzone p {

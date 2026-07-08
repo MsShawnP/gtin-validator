@@ -114,7 +114,7 @@ td {
   color: var(--color-white);
 }
 
-.badge-critical { background: var(--color-error); }
+.badge-critical { background: var(--color-critical-fill); }
 .badge-warning { background: var(--color-warning); color: var(--color-white); }
 .badge-info { background: var(--color-info); }
 
