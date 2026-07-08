@@ -740,10 +740,14 @@ def calculate_readiness_score(
     """
     Calculate an overall submission readiness score (0–100).
 
-    Scoring breakdown:
-        - 70 pts max: percentage of GTINs without critical issues
+    Scoring breakdown (rebased to 100 so clean data can earn Grade A):
+        - 90 pts max: percentage of GTINs without critical issues. Clean,
+          fully-valid data reaches 90 (Grade A) on validity alone — a file
+          does not need case GTINs to be submission-ready.
         - -15 pts max: penalty for warning-only GTINs
-        - +15 pts max: bonus for complete packaging hierarchy
+        - +10 pts max: bonus for a complete packaging hierarchy (unit → case).
+          Absent hierarchy is not penalized; hierarchy problems already
+          surface as warnings, which the penalty above accounts for.
     """
     if not results:
         return {"score": 0, "grade": "N/A", "interpretation": "No GTINs to evaluate."}
@@ -752,12 +756,12 @@ def calculate_readiness_score(
     critical_count = sum(1 for r in results if r.has_critical)
     warning_count = sum(1 for r in results if r.has_warning and not r.has_critical)
 
-    base = ((total - critical_count) / total) * 70
+    base = ((total - critical_count) / total) * 90
     warning_penalty = (warning_count / total) * 15
 
     hierarchy_bonus = 0
     if hierarchy["has_hierarchy"]:
-        hierarchy_bonus = 15 if hierarchy["hierarchy_complete"] else 10
+        hierarchy_bonus = 10 if hierarchy["hierarchy_complete"] else 5
 
     score = max(0, min(100, round(base - warning_penalty + hierarchy_bonus)))
 
@@ -883,7 +887,8 @@ def generate_executive_summary(validation_data: BatchResult) -> str:
     if score["score"] >= 90:
         lines.append(
             f"Your product data is in strong shape. Of {total} GTINs analyzed, "
-            f"{clean} passed all validation checks with no issues."
+            f"{clean} passed all validation checks with no issues. Your submission "
+            f"readiness score is {score['score']}/100 (Grade: {score['grade']})."
         )
     elif score["score"] >= 75:
         lines.append(
