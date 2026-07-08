@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import type {
   BeforeAfter,
+  CostAssumptions,
   CostEstimate,
   FixRoadmapItem,
   GTIN14Suggestion,
@@ -407,26 +409,95 @@ export function CostOfInaction({ cost }: { cost: CostEstimate | null }) {
       </section>
     )
   }
+  return <CostOfInactionBody cost={cost} />
+}
+
+function CostOfInactionBody({ cost }: { cost: CostEstimate }) {
+  const [a, setA] = useState<CostAssumptions>(cost.assumptions)
+  const d = cost.drivers
+
+  // Recompute client-side from driver counts × current assumptions so the
+  // totals track edits. Mirrors estimate_cost_of_inaction in gtin_core.py.
+  const chargebackLow = Math.round(d.critical_count * a.chargeback_per_item_low)
+  const chargebackHigh = Math.round(d.critical_count * a.chargeback_per_item_high)
+  const delayedSkus = Math.round(d.critical_count * a.delayed_sku_fraction)
+  const delayLow = Math.round(delayedSkus * a.delayed_launch_per_sku_low)
+  const delayHigh = Math.round(delayedSkus * a.delayed_launch_per_sku_high)
+  const reworkHours = Math.round(
+    d.critical_count * a.rework_hours_per_critical +
+      d.warning_count * a.rework_hours_per_warning,
+  )
+  const reworkCost = Math.round(reworkHours * a.rework_rate_per_hour)
+  const annualLow = chargebackLow + delayLow + reworkCost
+  const annualHigh = chargebackHigh + delayHigh + reworkCost
+
+  const set = (key: keyof CostAssumptions, value: string) => {
+    const v = parseFloat(value)
+    setA((prev) => ({ ...prev, [key]: Number.isFinite(v) ? v : 0 }))
+  }
+  const usd = (n: number) => `$${n.toLocaleString()}`
+
+  const fields: { key: keyof CostAssumptions; label: string }[] = [
+    { key: 'chargeback_per_item_low', label: 'Chargeback per invalid item — low ($)' },
+    { key: 'chargeback_per_item_high', label: 'Chargeback per invalid item — high ($)' },
+    { key: 'delayed_launch_per_sku_low', label: 'Delayed launch per SKU — low ($)' },
+    { key: 'delayed_launch_per_sku_high', label: 'Delayed launch per SKU — high ($)' },
+    { key: 'rework_rate_per_hour', label: 'Manual rework ($/hour)' },
+    { key: 'growth_multiplier_low', label: 'Growth multiplier — low (×)' },
+    { key: 'growth_multiplier_high', label: 'Growth multiplier — high (×)' },
+  ]
+
   return (
     <section id="cost" className={styles.section}>
       <h3>Estimated Cost of Inaction</h3>
       <p>
-        Based on industry averages for specialty food brands at similar scale.
-        Directional, not predictive.
+        These figures are your assumptions run through simple arithmetic, not
+        sourced facts. Edit any assumption to match your own retailer terms and
+        the totals recalculate as you type.
       </p>
       <div className={styles.costGrid}>
         <div className={styles.costCard}>
           <div className={styles.costNumber}>
-            ${cost.annual_estimate_low.toLocaleString()} –{' '}
-            ${cost.annual_estimate_high.toLocaleString()}
+            {usd(annualLow)} – {usd(annualHigh)}
           </div>
           <div>Estimated annual cost of unresolved GTIN issues</div>
         </div>
         <div className={styles.costCard}>
-          <div className={styles.costNumber}>{cost.rework_hours} hours/year</div>
+          <div className={styles.costNumber}>{reworkHours} hours/year</div>
           <div>Manual rework from GTIN problems</div>
         </div>
       </div>
+
+      <details className={styles.expandable}>
+        <summary>
+          Assumptions (editable) — {d.critical_count} critical and{' '}
+          {d.warning_count} warning item(s) drive these numbers
+        </summary>
+        <div className={styles.expandableContent}>
+          <div className={styles.assumptionGrid}>
+            {fields.map((f) => (
+              <label key={f.key}>
+                {f.label}
+                <input
+                  type="number"
+                  min={0}
+                  value={a[f.key]}
+                  onChange={(e) => set(f.key, e.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="btn"
+            style={{ marginTop: '0.75rem' }}
+            onClick={() => setA(cost.assumptions)}
+          >
+            Reset to defaults
+          </button>
+        </div>
+      </details>
+
       <h4>Breakdown</h4>
       <table>
         <thead>
@@ -438,27 +509,28 @@ export function CostOfInaction({ cost }: { cost: CostEstimate | null }) {
         </thead>
         <tbody>
           <tr>
-            <td>Chargebacks from invalid GTINs</td>
-            <td>${cost.chargeback_range[0].toLocaleString()}</td>
-            <td>${cost.chargeback_range[1].toLocaleString()}</td>
+            <td>Chargebacks from invalid GTINs ({d.critical_count} items)</td>
+            <td>{usd(chargebackLow)}</td>
+            <td>{usd(chargebackHigh)}</td>
           </tr>
           <tr>
-            <td>Delayed launches ({cost.delayed_skus} SKUs)</td>
-            <td>${cost.delayed_launch_range[0].toLocaleString()}</td>
-            <td>${cost.delayed_launch_range[1].toLocaleString()}</td>
+            <td>Delayed launches ({delayedSkus} SKUs)</td>
+            <td>{usd(delayLow)}</td>
+            <td>{usd(delayHigh)}</td>
           </tr>
           <tr>
-            <td>Manual rework ({cost.rework_hours} hrs)</td>
-            <td>${cost.rework_cost.toLocaleString()}</td>
-            <td>${cost.rework_cost.toLocaleString()}</td>
+            <td>Manual rework ({reworkHours} hrs)</td>
+            <td>{usd(reworkCost)}</td>
+            <td>{usd(reworkCost)}</td>
           </tr>
         </tbody>
       </table>
-      {cost.growth_note && (
-        <p style={{ marginTop: '0.75rem', color: '#a05a1a', fontWeight: 500 }}>
-          Growth multiplier: {cost.growth_note}
-        </p>
-      )}
+      <p style={{ marginTop: '0.75rem', color: '#a05a1a', fontWeight: 500 }}>
+        Assumption: at 2× your current SKU count ({d.total_gtins * 2} SKUs) with
+        additional retailers, these costs are assumed to scale{' '}
+        {a.growth_multiplier_low}–{a.growth_multiplier_high}×. Adjust the
+        multiplier above to your own retailer mix.
+      </p>
     </section>
   )
 }

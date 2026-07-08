@@ -51,6 +51,10 @@ class CostEstimateOut(BaseModel):
     annual_estimate_high: int
     growth_note: str
     delayed_skus: int
+    # The assumptions behind the totals (editable in the report) and the
+    # driver counts they multiply, so the figures read as adjustable, not fact.
+    assumptions: dict[str, float]
+    drivers: dict[str, int]
 
 
 class HierarchyPairOut(BaseModel):

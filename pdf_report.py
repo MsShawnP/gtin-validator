@@ -201,8 +201,9 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
         elements.append(PageBreak())
         elements.append(Paragraph("Estimated Cost of Inaction", heading_style))
         elements.append(Paragraph(
-            "These estimates are based on industry averages for specialty food brands "
-            "at similar scale. Actual costs vary by retailer mix and volume.",
+            "These are planning assumptions applied to your data, not sourced facts. "
+            "The per-unit figures behind each total are listed below the table — "
+            "adjust them to your own retailer terms and volume.",
             small_style,
         ))
 
@@ -240,6 +241,31 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
             ("ROWBACKGROUNDS", (0, 1), (-1, -2), [WHITE, LIGHT_GRAY]),
         ]))
         elements.append(cost_table)
+
+        # Show the assumptions behind the totals so the figures read as
+        # adjustable inputs, not asserted facts.
+        a = cost.get("assumptions")
+        if a:
+            elements.append(Spacer(1, 8))
+            elements.append(Paragraph(
+                "<b>Assumptions used</b> (adjust to your own retailer terms):",
+                small_style,
+            ))
+            assumption_lines = [
+                f"Chargeback per invalid item: ${int(a['chargeback_per_item_low']):,}"
+                f"–${int(a['chargeback_per_item_high']):,}",
+                f"Delayed launch per SKU (per month): "
+                f"${int(a['delayed_launch_per_sku_low']):,}"
+                f"–${int(a['delayed_launch_per_sku_high']):,}",
+                f"Manual rework: ${int(a['rework_rate_per_hour']):,}/hour",
+                f"Cost scaling at 2x SKUs: {a['growth_multiplier_low']:g}"
+                f"–{a['growth_multiplier_high']:g}x (assumed, not sourced)",
+            ]
+            for line in assumption_lines:
+                elements.append(Paragraph(
+                    f"• {line}",
+                    ParagraphStyle("AssumptionItem", parent=small_style, leftIndent=12),
+                ))
 
         if cost.get("growth_note"):
             elements.append(Spacer(1, 6))

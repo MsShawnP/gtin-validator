@@ -105,6 +105,8 @@ def serialize_cost_estimate(cost: dict) -> CostEstimateOut | None:
         annual_estimate_high=cost["annual_estimate_high"],
         growth_note=cost["growth_note"],
         delayed_skus=cost["delayed_skus"],
+        assumptions=cost["assumptions"],
+        drivers=cost["drivers"],
     )
 
 

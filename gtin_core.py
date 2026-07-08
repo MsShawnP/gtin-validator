@@ -785,42 +785,68 @@ def calculate_readiness_score(
 # Cost-of-inaction estimates
 # =============================================================================
 
-def estimate_cost_of_inaction(results: list[GTINResult]) -> dict:
+# Default cost-of-inaction assumptions. These are directional planning
+# figures for specialty food / CPG — NOT sourced facts. They are surfaced to
+# the user as editable assumptions in the report (with the driver counts they
+# multiply) rather than asserted as ground truth, so the dollar totals read as
+# "your numbers, our arithmetic" instead of an unsupported claim.
+COST_ASSUMPTIONS: dict[str, float] = {
+    "chargeback_per_item_low": 200,       # $ per invalid item, low
+    "chargeback_per_item_high": 500,      # $ per invalid item, high
+    "delayed_launch_per_sku_low": 1000,   # $ per delayed SKU-month, low
+    "delayed_launch_per_sku_high": 5000,  # $ per delayed SKU-month, high
+    "delayed_sku_fraction": 0.25,         # share of critical items that stall a launch
+    "rework_rate_per_hour": 50,           # $ per hour of manual rework
+    "rework_hours_per_critical": 3,       # hours to fix one critical issue
+    "rework_hours_per_warning": 1,        # hours to fix one warning
+    "growth_multiplier_low": 3,           # cost scaling at 2x SKUs, low
+    "growth_multiplier_high": 4,          # cost scaling at 2x SKUs, high
+}
+
+
+def estimate_cost_of_inaction(
+    results: list[GTINResult],
+    assumptions: Optional[dict[str, float]] = None,
+) -> dict:
     """
     Estimate annual cost of unresolved GTIN issues.
 
-    Based on industry averages for specialty food / CPG:
-        - Chargeback per invalid item: $200–$500 per occurrence
-        - Delayed launch: ~$1,000–$5,000 per SKU per month
-        - Manual rework: ~$50/hr
+    Every rate here is a planning ASSUMPTION, not a sourced figure. The
+    assumptions used (and the driver counts they multiply) are returned
+    alongside the estimate so the report can present them as editable inputs
+    rather than presenting the dollar totals as established fact.
 
-    These are directional estimates, not predictions.
+    Args:
+        results: Validated GTIN results.
+        assumptions: Optional overrides merged over COST_ASSUMPTIONS.
     """
     if not results:
         return {}
+
+    a = {**COST_ASSUMPTIONS, **(assumptions or {})}
 
     critical_count = sum(1 for r in results if r.has_critical)
     warning_count = sum(1 for r in results if r.has_warning)
     total = len(results)
 
-    chargeback_low = critical_count * 200
-    chargeback_high = critical_count * 500
+    chargeback_low = int(critical_count * a["chargeback_per_item_low"])
+    chargeback_high = int(critical_count * a["chargeback_per_item_high"])
 
-    delayed_skus = round(critical_count * 0.25)
-    delay_cost_low = delayed_skus * 1000
-    delay_cost_high = delayed_skus * 5000
+    delayed_skus = round(critical_count * a["delayed_sku_fraction"])
+    delay_cost_low = int(delayed_skus * a["delayed_launch_per_sku_low"])
+    delay_cost_high = int(delayed_skus * a["delayed_launch_per_sku_high"])
 
-    rework_hours = (critical_count * 3) + (warning_count * 1)
-    rework_cost = rework_hours * 50
+    rework_hours = int(
+        (critical_count * a["rework_hours_per_critical"])
+        + (warning_count * a["rework_hours_per_warning"])
+    )
+    rework_cost = int(rework_hours * a["rework_rate_per_hour"])
 
     growth_note = (
-        f"At 2x your current SKU count ({total * 2} SKUs) with additional "
-        f"retailers, these costs typically increase 3-4x."
-        if total >= 20
-        else (
-            "As you add SKUs and retailers, these problems compound. "
-            "Companies at 2x your SKU count typically see 3-4x these costs."
-        )
+        f"Assumption: at 2x your current SKU count ({total * 2} SKUs) with "
+        f"additional retailers, these costs are assumed to scale "
+        f"{a['growth_multiplier_low']:g}-{a['growth_multiplier_high']:g}x. "
+        f"Adjust the multiplier to your own retailer mix."
     )
 
     return {
@@ -832,6 +858,14 @@ def estimate_cost_of_inaction(results: list[GTINResult]) -> dict:
         "annual_estimate_high": chargeback_high + delay_cost_high + rework_cost,
         "growth_note": growth_note,
         "delayed_skus": delayed_skus,
+        "assumptions": a,
+        "drivers": {
+            "critical_count": critical_count,
+            "warning_count": warning_count,
+            "total_gtins": total,
+            "delayed_skus": delayed_skus,
+            "rework_hours": rework_hours,
+        },
     }
 
 

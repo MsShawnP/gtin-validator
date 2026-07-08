@@ -46,6 +46,27 @@ export interface ScoreResult {
   interpretation: string
 }
 
+export interface CostAssumptions {
+  chargeback_per_item_low: number
+  chargeback_per_item_high: number
+  delayed_launch_per_sku_low: number
+  delayed_launch_per_sku_high: number
+  delayed_sku_fraction: number
+  rework_rate_per_hour: number
+  rework_hours_per_critical: number
+  rework_hours_per_warning: number
+  growth_multiplier_low: number
+  growth_multiplier_high: number
+}
+
+export interface CostDrivers {
+  critical_count: number
+  warning_count: number
+  total_gtins: number
+  delayed_skus: number
+  rework_hours: number
+}
+
 export interface CostEstimate {
   chargeback_range: [number, number]
   delayed_launch_range: [number, number]
@@ -55,6 +76,8 @@ export interface CostEstimate {
   annual_estimate_high: number
   growth_note: string
   delayed_skus: number
+  assumptions: CostAssumptions
+  drivers: CostDrivers
 }
 
 export interface HierarchyPair {

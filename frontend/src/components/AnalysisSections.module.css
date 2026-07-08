@@ -113,6 +113,38 @@
   color: var(--color-cost-text);
 }
 
+.assumptionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.assumptionGrid label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+}
+
+.assumptionGrid input {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-white);
+  text-transform: none;
+}
+
+.assumptionGrid input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
 .roadmapMeta {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -159,4 +191,5 @@
 @media (max-width: 768px) {
   .costGrid { grid-template-columns: 1fr; }
   .roadmapMeta { grid-template-columns: 1fr; }
+  .assumptionGrid { grid-template-columns: 1fr; }
 }
