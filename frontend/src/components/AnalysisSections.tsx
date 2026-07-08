@@ -525,7 +525,7 @@ function CostOfInactionBody({ cost }: { cost: CostEstimate }) {
           </tr>
         </tbody>
       </table>
-      <p style={{ marginTop: '0.75rem', color: '#a05a1a', fontWeight: 500 }}>
+      <p style={{ marginTop: '0.75rem', color: 'var(--color-cost-text)', fontWeight: 500 }}>
         Assumption: at 2× your current SKU count ({d.total_gtins * 2} SKUs) with
         additional retailers, these costs are assumed to scale{' '}
         {a.growth_multiplier_low}–{a.growth_multiplier_high}×. Adjust the

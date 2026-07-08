@@ -73,7 +73,7 @@
   /* Cost/score gradients — updated to Lailara palette */
   --gradient-score: linear-gradient(135deg, #0d0d0d 0%, #1f2e7a 100%);
   --gradient-cost: linear-gradient(135deg, #fdeee0 0%, #fbdabc 100%);
-  --color-cost-text: #a05a1a;
+  --color-cost-text: #7a3d10; /* Singapore-20 — cost/warning ink */
 
   /* Typography */
   --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
