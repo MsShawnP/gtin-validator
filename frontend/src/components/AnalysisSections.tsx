@@ -89,7 +89,7 @@ export function IssuesBySeverity({ results }: { results: GTINResult[] }) {
       {renderGroup(warning, 'Warning', 'WARNING', 'badge-warning', 'These GTINs may cause problems.')}
       {renderGroup(info, 'Info', 'INFO', 'badge-info', 'Best practice notes.')}
       {!critical.length && !warning.length && !info.length && (
-        <div className={styles.success}>All GTINs passed validation with no issues!</div>
+        <div className={styles.success}>All GTINs passed validation with no issues.</div>
       )}
     </section>
   )
@@ -334,7 +334,7 @@ export function PrioritizedFixPlan({ items }: { items: FixRoadmapItem[] }) {
           </details>
         ))
       ) : (
-        <div className={styles.success}>No issues to fix — your data is clean!</div>
+        <div className={styles.success}>No issues to fix — your data is clean.</div>
       )}
     </section>
   )
