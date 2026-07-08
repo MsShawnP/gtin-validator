@@ -31,14 +31,19 @@ from gtin_core import Severity
 if TYPE_CHECKING:
     from gtin_core import BatchResult
 
-# Colors
-DARK = colors.HexColor("#1a1a2e")
-ACCENT = colors.HexColor("#e94560")
-GRAY = colors.HexColor("#6c757d")
-LIGHT_GRAY = colors.HexColor("#f8f9fa")
-GREEN = colors.HexColor("#28a745")
-YELLOW = colors.HexColor("#ffc107")
-RED = colors.HexColor("#dc3545")
+# Colors — Lailara Design System v2 tokens (was an off-palette Bootstrap scheme)
+INK = colors.HexColor("#0d0d0d")          # London-5 — headings, headline numbers
+BODY = colors.HexColor("#333333")         # London-20 — body text
+GRAY = colors.HexColor("#595959")         # London-35 — subtitles, small text
+LIGHT_GRAY = colors.HexColor("#f2f2f2")   # London-95 — zebra row fill
+RULE = colors.HexColor("#d9d9d9")         # London-85 — hairline rules, table grid
+HEADER_BG = colors.HexColor("#1f2e7a")    # Chicago-20 — table header fill
+ACCENT = colors.HexColor("#cc100a")       # Red-42 — brand accent (ink only)
+GREEN = colors.HexColor("#158f75")        # Hong Kong-35 — pass / clean
+YELLOW = colors.HexColor("#ee8a2a")       # Singapore-55 — warnings
+RED = colors.HexColor("#cc100a")          # Red-42 — critical (ink: dots, icons, text)
+INFO = colors.HexColor("#1f2e7a")         # Chicago-20 — info severity
+SG_SURFACE = colors.HexColor("#fdeee0")   # Singapore-95 — total-row highlight
 WHITE = colors.white
 
 # Approximate page height available for content (letter = 792pt, minus margins and buffer)
@@ -50,7 +55,7 @@ def severity_color(severity):
         return RED
     elif severity == Severity.WARNING:
         return YELLOW
-    return colors.HexColor("#17a2b8")
+    return INFO
 
 
 def generate_pdf_report(validation_data: BatchResult, company_name: str = "") -> BytesIO:
@@ -72,7 +77,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
         "ReportTitle",
         parent=styles["Title"],
         fontSize=22,
-        textColor=DARK,
+        textColor=INK,
         spaceAfter=6,
         alignment=TA_LEFT,
     )
@@ -87,7 +92,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
         "SectionHeading",
         parent=styles["Heading2"],
         fontSize=14,
-        textColor=DARK,
+        textColor=INK,
         spaceBefore=20,
         spaceAfter=10,
         borderWidth=0,
@@ -96,7 +101,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
         "BodyText",
         parent=styles["Normal"],
         fontSize=10,
-        textColor=DARK,
+        textColor=BODY,
         spaceAfter=6,
         leading=14,
     )
@@ -111,7 +116,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
         "ScoreText",
         parent=styles["Normal"],
         fontSize=36,
-        textColor=DARK,
+        textColor=INK,
         alignment=TA_CENTER,
         spaceAfter=4,
         leading=44,
@@ -146,7 +151,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
         subtitle_style,
     ))
     elements.append(HRFlowable(
-        width="100%", thickness=1, color=colors.HexColor("#dee2e6"),
+        width="100%", thickness=1, color=RULE,
         spaceAfter=20,
     ))
 
@@ -178,14 +183,14 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
     ]
     summary_table = Table(summary_data, colWidths=[3.5 * inch, 2 * inch])
     summary_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), DARK),
+        ("BACKGROUND", (0, 0), (-1, 0), HEADER_BG),
         ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("ALIGN", (1, 0), (1, -1), "CENTER"),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
         ("TOPPADDING", (0, 0), (-1, -1), 6),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#dee2e6")),
+        ("GRID", (0, 0), (-1, -1), 0.5, RULE),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, LIGHT_GRAY]),
     ]))
     elements.append(summary_table)
@@ -222,16 +227,16 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
         ]
         cost_table = Table(cost_data, colWidths=[3.5 * inch, 2.5 * inch])
         cost_table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), DARK),
+            ("BACKGROUND", (0, 0), (-1, 0), HEADER_BG),
             ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
             ("FONTSIZE", (0, 0), (-1, -1), 10),
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
             ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
-            ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#fff3cd")),
+            ("BACKGROUND", (0, -1), (-1, -1), SG_SURFACE),
             ("ALIGN", (1, 0), (1, -1), "RIGHT"),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
             ("TOPPADDING", (0, 0), (-1, -1), 6),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#dee2e6")),
+            ("GRID", (0, 0), (-1, -1), 0.5, RULE),
             ("ROWBACKGROUNDS", (0, 1), (-1, -2), [WHITE, LIGHT_GRAY]),
         ]))
         elements.append(cost_table)
@@ -399,7 +404,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
             parts = [Paragraph(
                 f'<b>{group_label}{suffix}</b> — {len(items)} item(s)',
                 ParagraphStyle("GroupHeader", parent=body_style, fontSize=11,
-                               spaceBefore=16, spaceAfter=after, textColor=DARK),
+                               spaceBefore=16, spaceAfter=after, textColor=INK),
             )]
             if recommendation_text and not continued:
                 parts.append(Paragraph(
@@ -448,7 +453,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
     severity_sections = [
         (critical_items, Severity.CRITICAL, RED, "Critical Issues — These GTINs will be rejected", False),
         (warning_items, Severity.WARNING, YELLOW, "Warnings — These GTINs may cause problems", True),
-        (info_items, Severity.INFO, colors.HexColor("#17a2b8"), "Info — Best practice notes", True),
+        (info_items, Severity.INFO, INFO, "Info — Best practice notes", True),
     ]
 
     for section_items, severity, label_color, title, page_break in severity_sections:
@@ -507,7 +512,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
     # --- Footer ---
     elements.append(Spacer(1, 30))
     elements.append(HRFlowable(
-        width="100%", thickness=0.5, color=colors.HexColor("#dee2e6"),
+        width="100%", thickness=0.5, color=RULE,
         spaceAfter=10,
     ))
     elements.append(Paragraph(
