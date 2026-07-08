@@ -149,4 +149,4 @@ MIT — see [LICENSE](LICENSE).
 *Built as a portfolio piece demonstrating product data consulting for specialty food brands. For a comprehensive Product Data Health Audit for your brand, [get in touch](mailto:msshawnp@gmail.com).*
 
 ---
-Built by [Lailara LLC](https://lailarallc.com) — data hygiene and analytics consu
+Built by [Lailara LLC](https://lailarallc.com) — data hygiene and analytics consulting for specialty food brands scaling into national retail.
