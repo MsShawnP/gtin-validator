@@ -51,7 +51,7 @@
 }
 
 .issueWarning {
-  color: #a05a1a;
+  color: var(--color-cost-text);
   font-weight: 600;
 }
 
