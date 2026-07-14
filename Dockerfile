@@ -10,6 +10,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY gtin_core.py csv_report.py pdf_report.py sample_data.py ./
+COPY brand_fonts/ ./brand_fonts/
 COPY backend/ ./backend/
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 

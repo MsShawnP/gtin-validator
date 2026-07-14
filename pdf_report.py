@@ -26,6 +26,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+from brand_fonts import register_fonts, SERIF, SERIF_BOLD, SANS, SANS_BOLD
 from gtin_core import Severity
 
 if TYPE_CHECKING:
@@ -60,6 +61,8 @@ def severity_color(severity):
 
 def generate_pdf_report(validation_data: BatchResult, company_name: str = "") -> BytesIO:
     """Generate a branded PDF report and return as BytesIO."""
+    register_fonts()
+
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -76,6 +79,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
     title_style = ParagraphStyle(
         "ReportTitle",
         parent=styles["Title"],
+        fontName=SERIF_BOLD,
         fontSize=22,
         textColor=INK,
         spaceAfter=6,
@@ -84,6 +88,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
     subtitle_style = ParagraphStyle(
         "ReportSubtitle",
         parent=styles["Normal"],
+        fontName=SANS,
         fontSize=11,
         textColor=GRAY,
         spaceAfter=20,
@@ -91,6 +96,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
     heading_style = ParagraphStyle(
         "SectionHeading",
         parent=styles["Heading2"],
+        fontName=SERIF_BOLD,
         fontSize=14,
         textColor=INK,
         spaceBefore=20,
@@ -100,6 +106,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
     body_style = ParagraphStyle(
         "BodyText",
         parent=styles["Normal"],
+        fontName=SANS,
         fontSize=10,
         textColor=BODY,
         spaceAfter=6,
@@ -108,6 +115,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
     small_style = ParagraphStyle(
         "SmallText",
         parent=styles["Normal"],
+        fontName=SANS,
         fontSize=8,
         textColor=GRAY,
         spaceAfter=4,
@@ -115,6 +123,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
     score_style = ParagraphStyle(
         "ScoreText",
         parent=styles["Normal"],
+        fontName=SERIF_BOLD,
         fontSize=36,
         textColor=INK,
         alignment=TA_CENTER,
@@ -124,6 +133,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
     grade_style = ParagraphStyle(
         "GradeText",
         parent=styles["Normal"],
+        fontName=SANS,
         fontSize=16,
         textColor=GRAY,
         alignment=TA_CENTER,
@@ -141,7 +151,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
     report_title = "Product Data Validation Report"
     if company_name:
         elements.append(Paragraph(company_name, ParagraphStyle(
-            "CompanyName", parent=styles["Normal"],
+            "CompanyName", parent=styles["Normal"], fontName=SANS,
             fontSize=12, textColor=ACCENT, spaceAfter=4,
         )))
 
@@ -186,7 +196,8 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
         ("BACKGROUND", (0, 0), (-1, 0), HEADER_BG),
         ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME", (0, 0), (-1, -1), SANS),
+        ("FONTNAME", (0, 0), (-1, 0), SANS_BOLD),
         ("ALIGN", (1, 0), (1, -1), "CENTER"),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
         ("TOPPADDING", (0, 0), (-1, -1), 6),
@@ -231,8 +242,9 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
             ("BACKGROUND", (0, 0), (-1, 0), HEADER_BG),
             ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
             ("FONTSIZE", (0, 0), (-1, -1), 10),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+            ("FONTNAME", (0, 0), (-1, -1), SANS),
+            ("FONTNAME", (0, 0), (-1, 0), SANS_BOLD),
+            ("FONTNAME", (0, -1), (-1, -1), SANS_BOLD),
             ("BACKGROUND", (0, -1), (-1, -1), SG_SURFACE),
             ("ALIGN", (1, 0), (1, -1), "RIGHT"),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
