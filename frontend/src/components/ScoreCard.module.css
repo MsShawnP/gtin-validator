@@ -1,5 +1,5 @@
 .card {
-  background: var(--gradient-score);
+  background: var(--color-score-bg);
   border-radius: var(--radius-xl);
   padding: var(--space-xl);
   text-align: center;

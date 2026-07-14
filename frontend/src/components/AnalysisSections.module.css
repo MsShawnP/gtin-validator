@@ -101,7 +101,7 @@
 }
 
 .costCard {
-  background: var(--gradient-cost);
+  background: var(--color-cost-bg);
   border: 1px solid var(--color-warning);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);

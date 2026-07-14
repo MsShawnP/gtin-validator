@@ -70,9 +70,9 @@
   --color-divider: #e0e0e0;
   --color-disabled: #b3b3b3;
 
-  /* Cost/score gradients — updated to Lailara palette */
-  --gradient-score: linear-gradient(135deg, #0d0d0d 0%, #1f2e7a 100%);
-  --gradient-cost: linear-gradient(135deg, #fdeee0 0%, #fbdabc 100%);
+  /* Dark-card and cost-card backgrounds — flat per DS (no gradients) */
+  --color-score-bg: #1a1a1a;
+  --color-cost-bg: #fdeee0;
   --color-cost-text: #7a3d10; /* Singapore-20 — cost/warning ink */
 
   /* Typography */
