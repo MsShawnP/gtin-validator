@@ -26,7 +26,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from brand_fonts import register_fonts, SERIF, SERIF_BOLD, SANS, SANS_BOLD
+from brand_fonts import SANS, SANS_BOLD, SERIF_BOLD, register_fonts
 from gtin_core import Severity
 
 if TYPE_CHECKING:
