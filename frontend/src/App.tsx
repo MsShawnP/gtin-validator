@@ -16,6 +16,7 @@ import Header from './components/Header'
 import HeroSection from './components/HeroSection'
 import InputSection from './components/InputSection'
 import NavigationSidebar from './components/NavigationSidebar'
+import ResultsCTA from './components/ResultsCTA'
 import ScoreCard from './components/ScoreCard'
 import SummaryStats from './components/SummaryStats'
 import { appReducer, initialState } from './reducer'
@@ -72,6 +73,15 @@ export default function App() {
           <ScoreCard score={data.score} />
           <SummaryStats summary={data.summary} />
 
+          <ResultsCTA
+            score={data.score.score}
+            grade={data.score.grade}
+            total={data.summary.total_gtins}
+            criticalCount={data.summary.critical_issues}
+            warningCount={data.summary.warnings}
+            companyName={state.companyName}
+          />
+
           <hr className="divider" />
 
           <DownloadReports
@@ -80,6 +90,9 @@ export default function App() {
             onCompanyNameChange={(name) =>
               dispatch({ type: 'SET_COMPANY_NAME', name })
             }
+            grade={data.score.grade}
+            score={data.score.score}
+            criticalCount={data.summary.critical_issues}
           />
 
           <hr className="divider" />

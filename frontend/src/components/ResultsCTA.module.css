@@ -1,0 +1,40 @@
+.cta {
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.critical {
+  background: var(--color-accent-light);
+  border-color: var(--color-accent);
+}
+
+.clean {
+  background: var(--color-success-light);
+  border-color: var(--color-success);
+}
+
+.cta h2 {
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-2xl);
+}
+
+.cta p {
+  margin-bottom: var(--space-md);
+  line-height: 1.5;
+  max-width: 640px;
+}
+
+.helper {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-sm);
+  margin-bottom: var(--space-md) !important;
+}
+
+.secondary {
+  display: inline-block;
+  font-weight: 600;
+  color: var(--color-primary);
+}

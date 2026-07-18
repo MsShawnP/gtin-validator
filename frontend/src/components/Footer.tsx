@@ -5,11 +5,12 @@ export default function Footer() {
     <footer className={styles.footer}>
       <p>
         Built for specialty food brands. Not affiliated with GS1, Walmart, or
-        any retailer.
-      </p>
-      <p>
-        For a comprehensive Product Data Health Audit,{' '}
-        <a href="mailto:msshawnp@gmail.com">get in touch</a>.
+        any retailer. Built by{' '}
+        <a href="https://lailarallc.com" target="_blank" rel="noopener noreferrer">
+          Lailara LLC
+        </a>{' '}
+        &mdash; data hygiene and analytics for specialty food brands scaling
+        into national retail.
       </p>
     </footer>
   )
