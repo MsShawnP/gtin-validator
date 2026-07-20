@@ -30,7 +30,8 @@ export default function HeroSection() {
           <strong>What you'll need</strong>
           <p>
             A list of GTINs &mdash; upload a CSV or Excel file, or paste them
-            directly. No account needed, no data stored.
+            directly. No account needed. Your file is never stored &mdash;
+            results are held in memory for 30 minutes, then discarded.
           </p>
         </div>
       </div>

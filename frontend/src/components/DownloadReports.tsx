@@ -85,7 +85,7 @@ export default function DownloadReports({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitting(true)
-    // Send only the email + summary metrics. The file never leaves the browser.
+    // Send only the email + summary metrics. The uploaded file is not part of this request.
     try {
       await fetch(SUBSCRIBE_ENDPOINT, {
         method: 'POST',
@@ -112,8 +112,8 @@ export default function DownloadReports({
         <form className={styles.gate} onSubmit={handleSubmit}>
           <h4>Where should I send these?</h4>
           <p>
-            Enter your email to unlock all three reports. Your file stays in
-            your browser &mdash; I only ever receive your email address.
+            Enter your email to unlock all three reports. Your email is all I
+            receive &mdash; it is never matched to your file or your results.
           </p>
           <div className={styles.gateRow}>
             <input
