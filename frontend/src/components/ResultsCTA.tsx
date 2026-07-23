@@ -63,14 +63,34 @@ export default function ResultsCTA({
     )
   }
 
+  // Clean-case handoff: same prefilled-mailto mechanism as the issues branch,
+  // adapted to a clean result. Still only a summary — nothing uploaded.
+  const cleanBody =
+    'Hi Shawn,\r\n\r\n' +
+    'I ran my GTINs through your validator and they came back clean:\r\n\r\n' +
+    `Score: ${score} (Grade ${grade})\r\n` +
+    ` Total GTINs: ${total}\r\n\r\n` +
+    'My product master is attached — I’d like the same check across the full file.\r\n\r\n' +
+    'Thanks,\r\n'
+  const cleanMailto = `mailto:shawn@lailarallc.com?subject=${encodeURIComponent(
+    subject,
+  )}&body=${encodeURIComponent(cleanBody)}`
+
   return (
     <section className={`${styles.cta} ${styles.clean}`}>
       <h2>Your GTINs are clean.</h2>
       <p>
-        That puts you ahead of most brands at item setup. If you want the same
-        check run across your full product master &mdash; dimensions, case
-        packs, GDSN records &mdash; that&rsquo;s what the Data Health Snapshot
-        does.
+        Clean GTINs put you ahead of most brands at item setup &mdash; but GTINs
+        are one field. The same check across your full product master
+        (dimensions, case packs, GDSN records) is where the expensive misses
+        hide, and they never show up in a GTIN scan. Send it over and
+        I&rsquo;ll write back with what I find. No call.
+      </p>
+      <a className="btn btn-primary" href={cleanMailto}>
+        Send me your product master for a free read
+      </a>
+      <p className={styles.helper}>
+        Opens your email app with a note filled in — attach your file and send.
       </p>
       <a
         className={styles.secondary}
