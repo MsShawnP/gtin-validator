@@ -11,11 +11,12 @@ export default function HeroSection() {
       </p>
       <div className={styles.cards}>
         <div className={styles.card}>
-          <strong>What this checks</strong>
+          <strong>Why it pays</strong>
           <p>
-            GS1 format standards (check digits, lengths, structure), retailer
-            submission rules (Walmart, Costco, UNFI format needs), packaging
-            hierarchy, and duplicate detection.
+            A bad GTIN doesn&apos;t fail loudly — it becomes a rejected item form,
+            a delayed launch, or a chargeback weeks later. Checks run against GS1
+            format standards, retailer submission rules (Walmart, Costco, UNFI),
+            packaging hierarchy, and duplicates — before a retailer finds them.
           </p>
         </div>
         <div className={styles.card}>
