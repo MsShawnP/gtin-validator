@@ -128,12 +128,32 @@ class TestSingleValidation:
         assert upc_issue.severity == Severity.INFO
 
     def test_company_prefix_extracted_gtin12(self):
+        # GTIN-12 prefix is sliced from the zero-padded (GTIN-13) form so it
+        # aligns with the prefix embedded in a case-level GTIN-14.
         result = validate_single_gtin("614141000012", row_number=1)
-        assert result.company_prefix == "6141410"
+        assert result.company_prefix == "0614141"
 
     def test_company_prefix_extracted_gtin14(self):
         result = validate_single_gtin("10614141000019", row_number=1)
         assert result.company_prefix == "0614141"
+
+    def test_unit_and_derived_case_share_company_prefix(self):
+        # A valid UPC-A and the GTIN-14 built from it (indicator digit +
+        # zero-padded item reference + recomputed check digit) must yield the
+        # same company prefix — and therefore no PREFIX_MISMATCH warning.
+        unit = "614141000012"
+        inner = unit.zfill(13)[:-1]  # 12 digits: zero-pad, drop check digit
+        case = "1" + inner + str(calculate_check_digit("1" + inner))
+
+        unit_result = validate_single_gtin(unit, row_number=1)
+        case_result = validate_single_gtin(case, row_number=2)
+        assert case_result.is_valid
+        assert unit_result.company_prefix == case_result.company_prefix
+
+        data = validate_batch([unit, case])
+        for r in data["results"]:
+            assert not any(i.code == "PREFIX_MISMATCH" for i in r.issues)
+        assert data["summary"]["unique_prefixes"] == 1
 
 
 # =========================================================================
@@ -157,7 +177,7 @@ class TestBatchValidation:
             i.code == "PREFIX_MISMATCH" for i in r.issues
         )]
         assert len(mismatched) == 1
-        assert mismatched[0].company_prefix == "7321410"
+        assert mismatched[0].company_prefix == "0732141"
 
     def test_summary_counts(self):
         data = validate_batch([

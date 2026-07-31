@@ -128,7 +128,7 @@ gtin-validator/
 - **Check digit algorithm**: GS1 standard mod-10 per [GS1 General Specifications §7.9](https://www.gs1.org/standards/barcodes-epcrfid-id-keys/gs1-general-specifications)
 - **GTIN-14 hierarchy detection**: Matches indicator digits 1–8 with corresponding unit GTINs by comparing the inner 12-digit item reference
 - **Company prefix detection**: Approximate — uses first 7 digits as a grouping heuristic (actual GS1 prefix lengths vary 7–10 digits)
-- **Cost estimates**: Based on published industry averages for specialty food/CPG. Directional, not predictive.
+- **Cost estimates**: illustrative defaults, not sourced facts — edit any assumption in the tool. Directional, not predictive.
 - **No data retention**: All validation happens in-session. The in-memory cache expires after 30 minutes and is not persisted.
 
 ## Standards referenced

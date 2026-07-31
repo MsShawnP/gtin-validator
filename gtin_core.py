@@ -389,7 +389,11 @@ def validate_single_gtin(raw: str, row_number: int) -> GTINResult:
         ))
 
     # --- Extract company prefix (approximate — real prefix length varies 7-10) ---
-    if gtin_type in (GTINType.GTIN_12, GTINType.GTIN_13):
+    # All types are sliced from the 13-digit (GTIN-13-normalized) form so a
+    # UPC-A and its case-level GTIN-14 yield the same prefix.
+    if gtin_type == GTINType.GTIN_12:
+        result.company_prefix = ("0" + cleaned)[:7]  # zero-pad to GTIN-13 form
+    elif gtin_type == GTINType.GTIN_13:
         result.company_prefix = cleaned[:7]
     elif gtin_type == GTINType.GTIN_14:
         result.company_prefix = cleaned[1:8]  # skip indicator digit
@@ -521,7 +525,9 @@ def validate_batch(gtins: list[str]) -> BatchResult:
         "valid": sum(1 for r in results if r.is_valid and not r.has_critical),
         "critical_issues": sum(1 for r in results if r.has_critical),
         "warnings": sum(1 for r in results if r.has_warning and not r.has_critical),
-        "clean": sum(1 for r in results if not r.issues),
+        # Clean = no critical or warning issues. INFO-level advisories (e.g.
+        # UPC_NOT_GTIN13 on every valid UPC-A) do not disqualify a row.
+        "clean": sum(1 for r in results if not (r.has_critical or r.has_warning)),
         "duplicate_groups": len(duplicates),
         "unique_prefixes": len(prefix_counts),
     }
@@ -921,8 +927,9 @@ def generate_executive_summary(validation_data: BatchResult) -> str:
     if score["score"] >= 90:
         lines.append(
             f"Your product data is in strong shape. Of {total} GTINs analyzed, "
-            f"{clean} passed all validation checks with no issues. Your submission "
-            f"readiness score is {score['score']}/100 (Grade: {score['grade']})."
+            f"{clean} passed all validation checks with no errors or warnings. "
+            f"Your submission readiness score is {score['score']}/100 "
+            f"(Grade: {score['grade']})."
         )
     elif score["score"] >= 75:
         lines.append(

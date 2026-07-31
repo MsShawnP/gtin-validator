@@ -187,7 +187,7 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
         ["Valid GTINs", str(summary["valid"])],
         ["Critical Issues", str(summary["critical_issues"])],
         ["Warnings", str(summary["warnings"])],
-        ["Clean (No Issues)", str(summary["clean"])],
+        ["Clean (No Errors/Warnings)", str(summary["clean"])],
         ["Duplicate Groups", str(summary["duplicate_groups"])],
         ["Unique Company Prefixes", str(summary["unique_prefixes"])],
     ]
@@ -539,11 +539,12 @@ def generate_pdf_report(validation_data: BatchResult, company_name: str = "") ->
             )
 
     # --- Clean items summary ---
-    clean_items = [r for r in results if not r.issues]
+    # Clean = no critical or warning issues (INFO advisories don't disqualify).
+    clean_items = [r for r in results if not (r.has_critical or r.has_warning)]
     if clean_items:
         elements.append(Spacer(1, 12))
         elements.append(Paragraph(
-            f"{len(clean_items)} GTIN(s) passed all checks with no issues.",
+            f"{len(clean_items)} GTIN(s) passed all checks with no errors or warnings.",
             ParagraphStyle("CleanSummary", parent=body_style, textColor=GREEN),
         ))
 
