@@ -1,0 +1,631 @@
+{
+ "_generated": {
+  "generated": "2026-08-01",
+  "generator": "scripts/verify_canonical.py",
+  "platform_head": "c94fd39",
+  "source": "reference/canonical_values.yml",
+  "verified_against_production": "2026-07-29"
+ },
+ "absent": {
+  "accounts_payable": {
+   "reason": "all 294 supplier invoices carry a paid_date; no open payable at any snapshot. DPO is the meaningful figure. Distinct from no-column.",
+   "status": "absent_structural"
+  },
+  "accounts_receivable": {
+   "reason": "schema has no aging/receivable concept; uncollected receivables are $0 by construction (Phase 1). Distinct from no-column.",
+   "status": "absent_structural"
+  },
+  "acv": {
+   "reason": "needs all-commodity store volume, absent. distribution.pct_authorized_selling and distribution.voids_authorized_not_scanned are proxies under their OWN names, NOT acv",
+   "status": "not_derivable"
+  },
+  "competitive_snapshots": {
+   "reason": "no table",
+   "status": "absent"
+  },
+  "households": {
+   "reason": "no table, no column in the warehouse",
+   "status": "absent"
+  },
+  "panel_projection_factor_k": {
+   "reason": "no table, no column",
+   "status": "absent"
+  }
+ },
+ "chargebacks": {
+  "distributor_count": {
+   "all_time": 484
+  },
+  "retailer_amount": {
+   "cy2023": 148475.03,
+   "cy2024": 153731.27,
+   "cy2025": 134314.2,
+   "trailing_12m": 134314.2,
+   "trailing_24m": 288045.47,
+   "trailing_36m": 436520.5
+  },
+  "retailer_count": {
+   "all_time": 2873,
+   "cy2023": 906,
+   "cy2024": 987,
+   "cy2025": 949,
+   "trailing_12m": 949,
+   "trailing_24m": 1936,
+   "trailing_36m": 2842
+  }
+ },
+ "cogs": {
+  "loaded_actual": {
+   "cy2023": 13900315.4,
+   "cy2024": 14888688.66,
+   "cy2025": 15297119.47,
+   "trailing_12m": 15297119.47,
+   "trailing_24m": 30185808.13,
+   "trailing_36m": 44086123.53
+  },
+  "loaded_standard": {
+   "cy2023": 14573121.05,
+   "cy2024": 14855274.53,
+   "cy2025": 14554989.89,
+   "trailing_12m": 14554989.89,
+   "trailing_24m": 29410264.42,
+   "trailing_36m": 43983385.47
+  },
+  "manufactured_actual": {
+   "cy2023": 11493959.1,
+   "cy2024": 12421447.88,
+   "cy2025": 12892806.73,
+   "trailing_12m": 12892806.73,
+   "trailing_24m": 25314254.61,
+   "trailing_36m": 36808213.71
+  },
+  "standard": {
+   "cy2023": 12166764.75,
+   "cy2024": 12388033.75,
+   "cy2025": 12150677.15,
+   "trailing_12m": 12150677.15,
+   "trailing_24m": 24538710.9,
+   "trailing_36m": 36705475.65
+  }
+ },
+ "cost": {
+  "freight_in": {
+   "cy2023": 2153477.05,
+   "cy2024": 2209461.53,
+   "cy2025": 2150732.9,
+   "trailing_12m": 2150732.9,
+   "trailing_24m": 4360194.43,
+   "trailing_36m": 6513671.49
+  },
+  "overhead": {
+   "cy2023": 252879.25,
+   "cy2024": 257779.25,
+   "cy2025": 253579.84,
+   "trailing_12m": 253579.84,
+   "trailing_24m": 511359.09,
+   "trailing_36m": 764238.34
+  },
+  "ppv": {
+   "cy2023": -672805.65,
+   "cy2024": 33414.13,
+   "cy2025": 742129.58,
+   "trailing_12m": 742129.58,
+   "trailing_24m": 775543.71,
+   "trailing_36m": 102738.06
+  }
+ },
+ "data_windows": {
+  "costing_inventory_snapshot": "2023-01-07|2025-12-27|7800",
+  "costing_product_costs": "2023-01-01|2026-01-01|1850",
+  "costing_supplier_invoices": "2023-01-01|2026-01-31|294",
+  "distribution_authorized": "2023-01-01|2025-11-07|9992",
+  "distribution_deauthorized": "2023-04-18|2024-11-10|816",
+  "distributor_deductions": "2023-01-27|2026-01-02|1970",
+  "distributor_orders": "2023-01-01|2026-01-02|9042",
+  "distributor_remittances": "2023-01-31|2026-01-02|111",
+  "promotions": "2023-01-02|2024-11-03|123",
+  "retailer_chargebacks": "2023-01-01|2026-01-01|2873",
+  "retailer_deductions": "2023-01-23|2026-01-02|14947",
+  "retailer_disputes": "2023-01-30|2026-01-02|5247",
+  "retailer_orders": "2023-01-01|2026-01-02|46760",
+  "retailer_remittances": "2023-01-26|2026-01-02|222",
+  "scan_data": "2023-01-07|2025-12-27|1323569",
+  "shopify_orders": "2023-01-01|2026-01-02|18497",
+  "tail_orders": "2026-01-02||",
+  "tail_scan": "2025-12-27||",
+  "tail_supplier_invoices": "2026-01-31||"
+ },
+ "deductions": {
+  "distributor_total": {
+   "cy2023": 71786.02,
+   "cy2024": 83528.84,
+   "cy2025": 71551.3,
+   "trailing_12m": 71551.3,
+   "trailing_24m": 155080.14,
+   "trailing_36m": 226866.16
+  },
+  "operational_waste_ex_billback": {
+   "cy2023": 280103.4,
+   "cy2024": 346672.47,
+   "cy2025": 344655.01,
+   "trailing_12m": 344655.01,
+   "trailing_24m": 691327.48,
+   "trailing_36m": 971430.88
+  },
+  "promo_billback": {
+   "cy2023": 42685.25,
+   "cy2024": 50173.02,
+   "cy2025": 52178.38,
+   "trailing_12m": 52178.38,
+   "trailing_24m": 102351.4,
+   "trailing_36m": 145036.65
+  },
+  "retailer_rows": {
+   "cy2023": 4367,
+   "cy2024": 5225,
+   "cy2025": 5320,
+   "trailing_12m": 5320,
+   "trailing_24m": 10545,
+   "trailing_36m": 14912
+  },
+  "retailer_total": {
+   "cy2023": 322788.65,
+   "cy2024": 396845.49,
+   "cy2025": 396833.39,
+   "trailing_12m": 396833.39,
+   "trailing_24m": 793678.88,
+   "trailing_36m": 1116467.53
+  }
+ },
+ "distribution": {
+  "authorizations": {
+   "cy2023": 9943,
+   "cy2024": 0,
+   "cy2025": 49,
+   "trailing_12m": 49,
+   "trailing_24m": 49,
+   "trailing_36m": 9992
+  },
+  "authorized_store_skus_active": {
+   "cy2023": 9591,
+   "cy2024": 9127,
+   "cy2025": 9176,
+   "trailing_12m": 9176,
+   "trailing_24m": 9176,
+   "trailing_36m": 9176
+  },
+  "deauthorizations": {
+   "cy2023": 352,
+   "cy2024": 464,
+   "cy2025": 0,
+   "trailing_12m": 0,
+   "trailing_24m": 464,
+   "trailing_36m": 816
+  },
+  "pct_authorized_selling": {
+   "cy2023": 100.0,
+   "cy2024": 99.93,
+   "cy2025": 99.47,
+   "trailing_12m": 99.47,
+   "trailing_24m": 99.42,
+   "trailing_36m": 99.51
+  },
+  "voids_authorized_not_scanned": {
+   "cy2023": 0,
+   "cy2024": 7,
+   "cy2025": 49,
+   "trailing_12m": 49,
+   "trailing_24m": 56,
+   "trailing_36m": 49
+  }
+ },
+ "margin": {
+  "contribution_commercial_pct": {
+   "all_time": 49.01
+  },
+  "gross_at_landed_pct": {
+   "all_time": 43.46
+  },
+  "gross_at_standard_pct": {
+   "all_time": 51.98
+  },
+  "loaded_actual_pct": {
+   "cy2023": 45.01,
+   "cy2024": 42.36,
+   "cy2025": 39.62,
+   "trailing_12m": 39.62,
+   "trailing_24m": 41.0,
+   "trailing_36m": 42.33
+  },
+  "loaded_standard_pct": {
+   "cy2023": 42.35,
+   "cy2024": 42.49,
+   "cy2025": 42.54,
+   "trailing_12m": 42.54,
+   "trailing_24m": 42.52,
+   "trailing_36m": 42.46
+  },
+  "ppv_pct_of_standard": {
+   "cy2023": -5.53,
+   "cy2024": 0.27,
+   "cy2025": 6.11,
+   "trailing_12m": 6.11,
+   "trailing_24m": 3.16,
+   "trailing_36m": 0.28
+  },
+  "sku_loaded_max_pct": {
+   "all_time": 60.94
+  },
+  "sku_loaded_min_pct": {
+   "all_time": 25.81
+  }
+ },
+ "meta": {
+  "data_tails": {
+   "orders": "2026-01-02",
+   "scan_data": "2025-12-27",
+   "supplier_invoices": "2026-01-31"
+  },
+  "default_period": "cy2025",
+  "query_source": "sql/canonical_gather.sql",
+  "verified_against_production": "2026-07-29",
+  "workflow_run": 30488858977
+ },
+ "price_history": {
+  "baseline": {
+   "effective_date": "2023-01-01",
+   "grain": "50 SKUs x 6 retailers",
+   "rows": 300
+  },
+  "date_span": "2023-01-01|2024-08-17",
+  "grain": "sku x retailer x effective_date (2023-01-01 baseline + subsequent price-change events)",
+  "provenance": "observed against live raw.price_history 2026-08-01 (read-only proxy); pending canonical_gather.sql",
+  "row_count": 407
+ },
+ "recoveries": {
+  "retailer_amount": {
+   "cy2023": 44982.37,
+   "cy2024": 57799.81,
+   "cy2025": 55558.92,
+   "trailing_12m": 55558.92,
+   "trailing_24m": 113358.73,
+   "trailing_36m": 158341.1
+  }
+ },
+ "revenue": {
+  "b2b_invoiced": {
+   "cy2023": 25087312.8,
+   "cy2024": 25639325.04,
+   "cy2025": 25150015.2,
+   "trailing_12m": 25150015.2,
+   "trailing_24m": 50789340.24,
+   "trailing_36m": 75876653.04
+  },
+  "combined_invoiced": {
+   "cy2023": 25276967.53,
+   "cy2024": 25830835.66,
+   "cy2025": 25332687.28,
+   "trailing_12m": 25332687.28,
+   "trailing_24m": 51163522.94,
+   "trailing_36m": 76440490.47
+  },
+  "defect_sku_ttm": {
+   "ttm_through_2025_12_27": 19487913.16
+  },
+  "dtc_gross": {
+   "cy2023": 189654.73,
+   "cy2024": 191510.62,
+   "cy2025": 182672.08,
+   "trailing_12m": 182672.08,
+   "trailing_24m": 374182.7,
+   "trailing_36m": 563837.43
+  },
+  "gross_payments_distributor": {
+   "cy2023": 7363461.6,
+   "cy2024": 8481750.96,
+   "cy2025": 7066666.8,
+   "trailing_12m": 7066666.8,
+   "trailing_24m": 15548417.76,
+   "trailing_36m": 22911879.36
+  },
+  "gross_payments_retailer": {
+   "cy2023": 15707584.32,
+   "cy2024": 16797432.0,
+   "cy2025": 17380018.08,
+   "trailing_12m": 17380018.08,
+   "trailing_24m": 34177450.08,
+   "trailing_36m": 49885034.4
+  },
+  "net_collected_retailer": {
+   "cy2023": 13682328.24,
+   "cy2024": 14627808.57,
+   "cy2025": 15160204.19,
+   "trailing_12m": 15160204.19,
+   "trailing_24m": 29788012.76,
+   "trailing_36m": 43470341.0
+  },
+  "retail_scan": {
+   "cy2023": 31731869.92,
+   "cy2024": 35003729.31,
+   "cy2025": 32323139.62,
+   "trailing_12m": 32323139.62,
+   "trailing_24m": 67326868.93,
+   "trailing_36m": 99058738.85,
+   "ttm_through_2025_12_27": 33248389.92
+  },
+  "wholesale_distributor": {
+   "cy2023": 8064242.64,
+   "cy2024": 7950288.96,
+   "cy2025": 7856371.68,
+   "trailing_12m": 7856371.68,
+   "trailing_24m": 15806660.64,
+   "trailing_36m": 23870903.28
+  },
+  "wholesale_retailer": {
+   "cy2023": 17023070.16,
+   "cy2024": 17689036.08,
+   "cy2025": 17293643.52,
+   "trailing_12m": 17293643.52,
+   "trailing_24m": 34982679.6,
+   "trailing_36m": 52005749.76
+  }
+ },
+ "supersedes": [
+  {
+   "reason": "brand name error; the brand is Cinderhaven Provisions",
+   "token": "Cinderhaven Foods"
+  },
+  {
+   "reason": "never a contracted retailer (roster: Walmart, Costco, Whole Foods, Sprouts, Kroger, Regional Group). Allowlist real-retailer deduction-practice research docs.",
+   "token": "Wegmans"
+  },
+  {
+   "reason": "retired pre-reseed scan revenue (the +2,225 phantom-row dataset); current cy2025 is 32,323,139.62",
+   "token": "32,472,742"
+  },
+  {
+   "reason": "same, no-comma code form (was pinned in tsdd validate_workbook.py)",
+   "token": "32472742"
+  },
+  {
+   "reason": "retired pre-reseed scan revenue prose form",
+   "token": "$32.5M"
+  },
+  {
+   "reason": "retired pre-reseed scan revenue prose form",
+   "token": "$32.5 million"
+  },
+  {
+   "reason": "retired scan denominator (pre-verification); current is $32.3M / $33.2M",
+   "token": "$32.8M"
+  },
+  {
+   "reason": "retired scan denominator prose form",
+   "token": "$32.8 million"
+  },
+  {
+   "reason": "retired old TTM rendering; current TTM is $33.2M ($33,248,389.92)",
+   "token": "$33.4M"
+  },
+  {
+   "reason": "retired old TTM prose form",
+   "token": "$33.4 million"
+  },
+  {
+   "reason": "retired combined-basis scan rendering",
+   "token": "$25.6M"
+  },
+  {
+   "reason": "retired PDHA product-data cost (pre-date-shift); current is $93K",
+   "token": "$461K"
+  },
+  {
+   "reason": "retired PDHA product-data cost, full form",
+   "token": "$461,000"
+  },
+  {
+   "reason": "retired PDHA product-data cost (pre-causal placeholder); current is $93K",
+   "token": "$458K"
+  },
+  {
+   "reason": "retired PDHA product-data cost (stale cache); current is $93K",
+   "token": "$430K"
+  },
+  {
+   "reason": "retired PDHA product-data cost (pre-reseed calibration); current is $93K",
+   "token": "$296K"
+  },
+  {
+   "reason": "retired panel projection factor k; k is absent (no table/column) \u2014 see absent.panel_projection_factor_k. NB: bare \"166.5\" is intentionally NOT a token \u2014 it collides with legitimate $166.50 money values in deduction/chargeback data.",
+   "token": "166.488"
+  },
+  {
+   "reason": "retired figure (not a current canonical value)",
+   "token": "$82,924"
+  },
+  {
+   "reason": "retired figure, no-$ form",
+   "token": "82,924"
+  },
+  {
+   "reason": "retired all-in trade cost (old seed rates); current ~$3.6M/yr",
+   "token": "$5.4M"
+  },
+  {
+   "reason": "retired May-2026 SQLite all-in export; current ~$3.6M/yr",
+   "token": "$7.2M"
+  },
+  {
+   "reason": "retired May-2026 SQLite all-in export, full form",
+   "token": "7,174,939"
+  },
+  {
+   "reason": "retired May-2026 SQLite all-in export, full $ form",
+   "token": "$7,174,939"
+  }
+ ],
+ "trade": {
+  "all_in_annual": {
+   "trailing_52w": 3556609.29
+  },
+  "all_in_rate_pct": {
+   "trailing_52w": 11.0
+  },
+  "all_in_total": {
+   "trailing_36m": 10669827.88
+  },
+  "op_waste_annual": {
+   "trailing_365d": 379558.78
+  },
+  "op_waste_rate_pct": {
+   "trailing_52w": 1.17
+  },
+  "promotional_spend": {
+   "cy2023": 194512.94,
+   "cy2024": 134377.94,
+   "cy2025": 0.0,
+   "trailing_12m": 0.0,
+   "trailing_24m": 134377.94,
+   "trailing_36m": 328890.88
+  },
+  "structural_allowance": {
+   "cy2023": 1494739.52,
+   "cy2024": 1602976.44,
+   "cy2025": 1653699.53,
+   "trailing_12m": 1653699.53,
+   "trailing_24m": 3256675.97,
+   "trailing_36m": 4751415.49
+  },
+  "structural_annual": {
+   "trailing_52w": 3177050.51
+  },
+  "structural_rate_pct": {
+   "trailing_52w": 9.83
+  }
+ },
+ "universe": {
+  "distributors": {
+   "all_time": 3
+  },
+  "product_lines": {
+   "all_time": 5
+  },
+  "retailers": {
+   "all_time": 6
+  },
+  "skus_selling": {
+   "cy2023": 50,
+   "cy2024": 50,
+   "cy2025": 50,
+   "trailing_12m": 50,
+   "trailing_24m": 50,
+   "trailing_36m": 50
+  },
+  "skus_total": {
+   "all_time": 50
+  },
+  "store_sku_pairs_selling": {
+   "cy2023": 9943,
+   "cy2024": 9584,
+   "cy2025": 9127,
+   "trailing_12m": 9127,
+   "trailing_24m": 9584,
+   "trailing_36m": 9943
+  },
+  "stores_selling": {
+   "cy2023": 640,
+   "cy2024": 640,
+   "cy2025": 640,
+   "trailing_12m": 640,
+   "trailing_24m": 640,
+   "trailing_36m": 640
+  },
+  "stores_total": {
+   "all_time": 640
+  }
+ },
+ "volume": {
+  "cases_b2b": {
+   "cy2023": 320645,
+   "cy2024": 332493,
+   "cy2025": 325807,
+   "trailing_12m": 325807,
+   "trailing_24m": 658300,
+   "trailing_36m": 978945
+  },
+  "orders_b2b": {
+   "cy2023": 18298,
+   "cy2024": 18852,
+   "cy2025": 18510,
+   "trailing_12m": 18510,
+   "trailing_24m": 37362,
+   "trailing_36m": 55660
+  },
+  "orders_dtc": {
+   "cy2023": 6202,
+   "cy2024": 6261,
+   "cy2025": 5962,
+   "trailing_12m": 5962,
+   "trailing_24m": 12223,
+   "trailing_36m": 18425
+  },
+  "scan_weeks": {
+   "cy2023": 52,
+   "cy2024": 52,
+   "cy2025": 52,
+   "trailing_12m": 52,
+   "trailing_24m": 104,
+   "trailing_36m": 156
+  },
+  "units_b2b": {
+   "cy2023": 6551568,
+   "cy2024": 6679152,
+   "cy2025": 6570000,
+   "trailing_12m": 6570000,
+   "trailing_24m": 13249152,
+   "trailing_36m": 19800720
+  },
+  "units_scan": {
+   "cy2023": 3942618,
+   "cy2024": 4348531,
+   "cy2025": 4004933,
+   "trailing_12m": 4004933,
+   "trailing_24m": 8353464,
+   "trailing_36m": 12296082
+  }
+ },
+ "workingcapital": {
+  "avg_inventory_value": {
+   "cy2023": 3470419.17,
+   "cy2024": 6299519.95,
+   "cy2025": 5642318.75,
+   "trailing_12m": 5642318.75,
+   "trailing_24m": 5970919.35,
+   "trailing_36m": 5137419.29
+  },
+  "dio_days": {
+   "cy2023": 91.1,
+   "cy2024": 154.9,
+   "cy2025": 134.6,
+   "trailing_12m": 134.6,
+   "trailing_24m": 144.6,
+   "trailing_36m": 127.7
+  },
+  "dpo_days": {
+   "cy2023": 35.5,
+   "cy2024": 31.3,
+   "cy2025": 32.3,
+   "trailing_12m": 32.3,
+   "trailing_24m": 31.9,
+   "trailing_36m": 33.6
+  },
+  "dso_days": {
+   "cy2023": 25.77,
+   "cy2024": 25.53,
+   "cy2025": 25.44,
+   "trailing_12m": 25.44,
+   "trailing_24m": 25.48,
+   "trailing_36m": 25.58
+  }
+ }
+}
