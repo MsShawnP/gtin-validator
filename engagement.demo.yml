@@ -1,0 +1,10 @@
+# Demo engagement config (safe to deploy: demo: true).
+client:
+  name: "Cinderhaven Foods (demo)"
+engagement:
+  id: "DEMO-GTIN-001"
+as_of_date: "2026-01-31"
+prepared_by: "Lailara LLC"
+demo: true
+columns:
+  gtin: "GTIN"
