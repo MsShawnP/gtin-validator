@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import html
-import sys
 from pathlib import Path
 
 from lailara_engagement import (
@@ -25,7 +24,6 @@ from lailara_engagement import (
     build_provenance,
     load_config,
     read_table,
-    render_html,
     run_preflight,
     validation_status_label,
     write_report,
@@ -130,18 +128,21 @@ body{{margin:0;background:{P.LL_CANVAS};color:{P.LL_TEXT};font-family:var(--f);l
 .ll-k{{display:block;color:{P.LL_TEXT_SEC};font-size:11px;text-transform:uppercase;letter-spacing:.04em}}
 .ll-banner{{border-radius:2px;padding:16px 20px;margin-bottom:32px}}
 .ll-score{{font-family:var(--s);font-weight:700;font-size:22px}}
-.ll-h2{{font-family:var(--s);font-weight:700;color:{P.LL_INK};font-size:22px;margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid {P.LL_GRIDLINE}}}
+.ll-h2{{font-family:var(--s);font-weight:700;color:{P.LL_INK};font-size:22px;
+margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid {P.LL_GRIDLINE}}}
 .ll-table{{width:100%;border-collapse:collapse;font-size:14px}}
 .ll-table th{{text-align:left;background:{P.LL_CHICAGO};color:#fff;padding:8px 12px}}
 .ll-table td{{padding:8px 12px;border-bottom:1px solid {P.LL_GRIDLINE}}}
 .mono{{font-family:ui-monospace,Consolas,monospace;font-size:12px}}
 .num{{text-align:right;font-variant-numeric:tabular-nums}}
-.ll-provenance{{margin-top:40px;background:{P.LL_CARD_BG};color:{P.LL_CARD_TEXT};padding:20px 24px;border-radius:2px;font-size:13px}}
+.ll-provenance{{margin-top:40px;background:{P.LL_CARD_BG};color:{P.LL_CARD_TEXT};
+padding:20px 24px;border-radius:2px;font-size:13px}}
 .ll-prov-title{{font-family:var(--s);font-weight:700;font-size:16px;margin-bottom:8px}}
 .ll-provenance div{{margin-bottom:4px;color:{P.LL_CARD_SUBTITLE}}}
 .ll-provenance strong{{color:{P.LL_CARD_TEXT}}}
 .ll-prov-inputs{{width:100%;border-collapse:collapse;margin-top:8px}}
-.ll-prov-inputs th{{text-align:left;border-bottom:1px solid rgba(255,255,255,.12);padding:4px 8px;color:{P.LL_CARD_MUTED}}}
+.ll-prov-inputs th{{text-align:left;border-bottom:1px solid rgba(255,255,255,.12);
+padding:4px 8px;color:{P.LL_CARD_MUTED}}}
 .ll-prov-inputs td{{padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:{P.LL_CARD_SUBTITLE}}}
 .ll-prov-brand{{margin-top:12px;font-family:var(--s);color:{P.LL_CARD_MUTED}}}
 {draft_css}
