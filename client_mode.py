@@ -54,8 +54,16 @@ def _gtin_spec() -> PreflightSpec:
     )
 
 
-def _summary_html(config, batch, provenance: Provenance, *, draft: bool) -> str:
+def _summary_html(config, batch, provenance: Provenance, report, *, draft: bool) -> str:
     esc = html.escape
+    # Surface preflight disclosures (e.g. the duplicate column-mapping WARN) so a
+    # proceed-with-warnings verdict is not silently trusted.
+    _lim_items = "".join(f"<li>{esc(x)}</li>" for x in report.disclosures)
+    lim_section = (
+        f'<section class=ll-section><h2 class=ll-h2>Data limitations</h2>'
+        f'<ul style="background:{P.LL_SG_SURFACE};color:{P.LL_SG_DARK};'
+        f'padding:12px 16px 12px 32px;border-radius:2px">{_lim_items}</ul></section>'
+    ) if _lim_items else ""
     s = batch["summary"]
     score = batch["score"]
     draft_class = " ll-draft" if draft else ""
@@ -90,6 +98,7 @@ def _summary_html(config, batch, provenance: Provenance, *, draft: bool) -> str:
   <div class=ll-score>Score {score['score']}/100 · Grade {esc(score['grade'])}</div>
   <div>{esc(score['interpretation'])}</div>
 </section>
+{lim_section}
 <section class=ll-section>
   <h2 class=ll-h2>Batch summary</h2>
   <table class=ll-table>
@@ -181,7 +190,7 @@ def run(config_path: str, input_path: str, out_dir: str, *, final: bool = False)
 
     # Branded, provenance-footed readiness summary
     summary_path = out / "gtin-readiness-summary.html"
-    summary_path.write_text(_summary_html(config, batch, provenance, draft=not final),
+    summary_path.write_text(_summary_html(config, batch, provenance, report, draft=not final),
                             encoding="utf-8")
 
     return {
