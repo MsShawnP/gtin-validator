@@ -37,6 +37,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest
-          pip install "lailara_engagement @ git+https://x-access-token:${LAILARA_ENGAGEMENT_TOKEN}@github.com/MsShawnP/lailara-engagement.git@v0.2.1#subdirectory=lib"
+          pip install "lailara_engagement @ git+https://x-access-token:${LAILARA_ENGAGEMENT_TOKEN}@github.com/MsShawnP/lailara-engagement.git@v0.2.2#subdirectory=lib"
       - name: Client-mode suite
         run: python -m pytest test_client_mode.py -q
