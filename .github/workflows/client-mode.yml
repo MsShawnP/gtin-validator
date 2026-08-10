@@ -1,0 +1,42 @@
+name: client-mode
+
+# Runs the client-mode suite (checklist §6), which imports lailara_engagement.
+# The lib is installed from the private repo pinned to v0.2.1 via the
+# LAILARA_ENGAGEMENT_TOKEN secret (fine-grained, read-only). This is the ONLY job
+# that depends on the PAT; the demo golden gate stays credential-free, so a token
+# expiry degrades client-mode coverage without ever reddening the demo invariant.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  client-mode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Engagement guard
+        run: python3 scripts/engagement_guard.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify engagement token is present
+        env:
+          LAILARA_ENGAGEMENT_TOKEN: ${{ secrets.LAILARA_ENGAGEMENT_TOKEN }}
+        run: |
+          if [ -z "${LAILARA_ENGAGEMENT_TOKEN}" ] || [ "${LAILARA_ENGAGEMENT_TOKEN}" = "-" ]; then
+            echo "::error::LAILARA_ENGAGEMENT_TOKEN is empty or unavailable (literal '-' means the secret was set with 'gh secret set --body -'). Re-set via stdin: gh secret set LAILARA_ENGAGEMENT_TOKEN --repo MsShawnP/<repo> < tokenfile"
+            exit 1
+          fi
+      - name: Install (repo runtime + lailara_engagement @ v0.2.1)
+        env:
+          LAILARA_ENGAGEMENT_TOKEN: ${{ secrets.LAILARA_ENGAGEMENT_TOKEN }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest
+          pip install "lailara_engagement @ git+https://x-access-token:${LAILARA_ENGAGEMENT_TOKEN}@github.com/MsShawnP/lailara-engagement.git@v0.2.2#subdirectory=lib"
+      - name: Client-mode suite
+        run: python -m pytest test_client_mode.py -q
