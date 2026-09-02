@@ -1,5 +1,15 @@
 # Decisions Log
 
+## 2026-09-02: Hosting is Fly.io; Render is retired
+
+**Decision:** gtin-validator is hosted on Fly.io. Render is retired.
+
+**Why:** Migrated off Render during the org migration. Deploys run through `.github/workflows/fly-deploy.yml` (Fly.io, app `gtin-validator`, region `iad`). Render was verified empty and `render.yaml` was orphaned dead config, so it was removed.
+
+**Scope:** Deployment/hosting for gtin-validator. Live URL `https://gtin.lailarallc.com`. (Note: some older decisions and prose files above/elsewhere still reference "Render free tier" as historical rationale — that context predates this migration.)
+
+**Do not:** Re-add `render.yaml` or reintroduce Render references as live config. Stale `onrender.com` mentions in prose files are historical, not current deployment.
+
 ## 2026-05-22: Use shared module pattern for cross-file framework singletons
 
 **Decision:** Any framework object that must be the same instance across modules (Limiter, metrics collectors, etc.) lives in its own module and is imported everywhere.

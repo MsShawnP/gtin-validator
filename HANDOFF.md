@@ -7,6 +7,18 @@
 **Live URL:** https://gtin.lailarallc.com
 **PR:** https://github.com/MsShawnP/gtin-validator/pull/12
 
+## 2026-09-02 — Remove stale render.yaml + correct hosting refs
+
+**Started from:** Fully-maintained project on main. Task: delete the orphaned `render.yaml` (dead config from the org migration — deploys run via CI, not Render).
+
+**Did:** Verified real deploy path is `.github/workflows/fly-deploy.yml` (Fly.io) and that no CI workflow references `render.yaml`. `git rm render.yaml` (3b1059a), pushed, watched all 4 workflows go green. Separate commit (6ee384c): corrected stale "Render free tier" hosting line in CLAUDE.md → Fly.io, and fixed the `project_live_url` memory record + MEMORY.md index (Render → Fly.io). Prose files (README, PLAN, AUDIT, DECISIONS, docs/solutions) still carry historical "Render" mentions — deliberately out of scope this session.
+
+**State:** render.yaml gone, main green on all 4 workflows, both commits pushed. CLAUDE.md + memory now say Fly.io (app `gtin-validator`/iad, https://gtin.lailarallc.com). No code touched — config/docs only.
+
+**Next:** No feature work planned. Optional: sweep remaining prose files (README, PLAN, AUDIT, DECISIONS, docs/solutions) for stale Render references. Overdue maintenance: `/improve` (was due 2026-06-22) and dep audit (was due 2026-07-22) — both overdue, run when convenient.
+
+---
+
 ## 2026-05-22 — Code review fix + dep audit + compound
 
 **Started from:** /improve pass complete, but rate limiting implementation was non-functional.
