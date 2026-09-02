@@ -11,7 +11,7 @@ FastAPI + React web app that validates GTINs against GS1 standards with retailer
 
 - **Backend:** Python 3.10+ / FastAPI / pandas / reportlab
 - **Frontend:** React 19 / Vite / TypeScript (strict)
-- **Hosting:** Render free tier (Docker, auto-deploys from main)
+- **Hosting:** Fly.io (Docker, auto-deploys from main via `.github/workflows/fly-deploy.yml`)
 - **Tests:** pytest (`pytest tests.py -v` for core, `pytest tests_api.py -v` for API)
 - **No database, no auth** — in-memory cache with TTL for session state
 
